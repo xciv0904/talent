@@ -6,6 +6,7 @@ export * from './career-direction-engine';
 export * from './career-result-engine';
 export * from './entry-distance-engine';
 export * from './exploration-priority-engine';
+export * from './fit-interpretation-engine';
 export * from './integration-engine';
 export * from './profile-engine';
 export * from './talent-engine';

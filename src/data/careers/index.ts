@@ -15,3 +15,4 @@ export { ANALYTICAL_SYSTEMS_CAREERS } from './analytical-systems';
 export { DIGITAL_COMMERCIAL_CAREERS } from './digital-commercial';
 export { PEOPLE_SERVICE_CAREERS } from './people-service';
 export { PUBLIC_CREATIVE_TECHNICAL_CAREERS } from './public-creative-technical';
+export { PUBLIC_CAREER_GROUPS } from './public-career-groups';
