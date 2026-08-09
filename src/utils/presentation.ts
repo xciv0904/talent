@@ -1,19 +1,7 @@
 import type { ConfidenceLevel, EntryDistanceLevel } from '../types';
 
-import type { CareerMatchResult } from '../types';
-
 export const formatScore = (score: number) => `${Math.round(score * 100)}%`;
 export const formatFitIndex = (score: number) => `${Math.round(score * 100)} / 100`;
-
-export function careerMatchReasons(match: CareerMatchResult): string[] {
-  const evidenceReasons = [...match.topTalentReasons, ...match.interestReasons, ...match.environmentReasons];
-  const transparentFallbacks = [
-    `天賦需求吻合指數 ${formatFitIndex(match.talentMatch)}`,
-    `興趣吻合指數 ${formatFitIndex(match.interestMatch)}`,
-    `工作方式吻合指數 ${formatFitIndex(match.workStyleMatch)}`,
-  ];
-  return [...new Set([...evidenceReasons, ...transparentFallbacks])].slice(0, 3);
-}
 
 export const confidenceLabel: Record<ConfidenceLevel, string> = {
   low: 'Low', medium: 'Medium', high: 'High',

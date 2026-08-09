@@ -72,7 +72,7 @@ Career matching is split into three boundaries:
 
 - `career-match-engine` calculates the six fit dimensions and explanation evidence.
 - `entry-distance-engine` calculates transition difficulty without lowering Career Fit.
-- `career-result-engine` selects Best Fit, Easier Transition, High Potential, and Surprise Me with separate filters and disjoint results.
+- `career-result-engine` retains legacy internal category outputs for regression, diagnostics, and conditional Surprise selection. These are not the public primary taxonomy. The public UI uses the evidence-gated three-level interpretation from `fit-interpretation-engine`.
 - `career-direction-engine` groups existing matches into plain-language activity directions and orders exploration priority without changing Career Fit.
 
 Market popularity, salary, and job-opening counts are absent from both the Career Profile and formula.

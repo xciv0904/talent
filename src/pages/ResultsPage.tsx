@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { CareerCard, PublicCareerCard } from '../components';
 import { CAREER_PROFILES } from '../data/careers';
 import { BASE_TALENTS, COMPOSITE_TALENTS } from '../data/talents';
-import { buildCareerDirections, buildDynamicTieBreaker, buildExplorationPriority, interpretPublicCareers } from '../engine';
+import { buildCareerDirections, buildDynamicTieBreaker, buildExplorationPriority, buildPrimaryCareerPresentation, interpretPublicCareers } from '../engine';
 import {
   buildBetaFeedbackExport,
   buildDiagnosticReport,
@@ -19,7 +19,7 @@ import {
   useAppState,
 } from '../services';
 import type { CareerFeedbackChoice, NavigatorNeed, NextStepClarityChoice, OverallFeedbackChoice, PrioritizedCareerDirection, SurpriseFeedbackChoice } from '../types';
-import { buildWorkPatternSummary, entryDistanceLabel, formatFitIndex, workMeaningForTalent } from '../utils';
+import { buildWorkPatternSummary, formatFitIndex, workMeaningForTalent } from '../utils';
 
 const sectionTitle = (number: string, title: string) => <div className="mb-6 flex items-baseline gap-4"><span className="text-sm font-bold text-slate-600">{number}</span><h2 className="text-2xl font-semibold sm:text-3xl">{title}</h2></div>;
 const overallOptions: Array<[OverallFeedbackChoice, string]> = [
@@ -55,6 +55,11 @@ export function ResultsPage() {
     talentProfile,
     responses: state.answers,
   }) : undefined, [careerResults, state.answers, talentProfile]);
+  const primaryCareers = useMemo(() => publicCareers ? buildPrimaryCareerPresentation(
+    publicCareers,
+    careerResults?.categories.surprise_me.map(({ careerId }) => careerId) ?? [],
+    { strong: 4, moderate: 3, lower: 2, surprise: 3 },
+  ) : undefined, [careerResults, publicCareers]);
   if (!talentProfile || !careerResults) return <main className="mx-auto max-w-3xl px-5 py-24 text-center"><h1 className="text-4xl font-semibold">還沒有可顯示的結果</h1><p className="mt-4 text-slate-600">完成探索題目後，這裡會整理值得先探索的方向與下一步。</p><Link to="/assessment" className="mt-8 inline-block rounded-full bg-slate-950 px-6 py-3 font-semibold text-white">前往測驗</Link></main>;
 
   const sortedTalents = [...talentProfile.baseTalents].sort((a, b) => b.score - a.score);
@@ -69,11 +74,13 @@ export function ResultsPage() {
   const tieBreakerAnswered = guidedPrompts.every(({ id }) => state.navigatorState.guidedAnswers[id]);
   const hasJourney = Boolean(state.selectedDirection || state.exploredCareers.length || state.completedExperiences.length);
   const evidenceBacked = directions.some(({ supportingEvidence }) => supportingEvidence.length > 0);
-  const primaryStrong = publicCareers?.strong.slice(0, 4) ?? [];
-  const primaryModerate = publicCareers?.moderate.filter(({ abilityAlignment, matchingReasons }) =>
-    matchingReasons.length > 0 || abilityAlignment.some(({ alignment }) => alignment === 'strong' || alignment === 'moderate'),
-  ).slice(0, 3) ?? [];
-  const primaryLower = publicCareers?.lower.slice(0, 2) ?? [];
+  const primaryStrong = primaryCareers?.strong ?? [];
+  const primaryModerate = primaryCareers?.moderate ?? [];
+  const exploratoryFallback = primaryCareers?.fallback ?? [];
+  const primaryLower = primaryCareers?.lower ?? [];
+  const careerSummary = primaryStrong.length
+    ? `目前有 ${primaryStrong.length} 類工作同時具有較完整的能力證據，並通過環境、能量與信心門檻。`
+    : `目前還沒有能力證據足夠集中的「非常適合」方向。我們不會只因相對排名較高，就把其中一個說成最適合。`;
 
   const handleNavigator = (need: NavigatorNeed) => {
     saveNavigatorNeed(need);
@@ -98,10 +105,12 @@ export function ResultsPage() {
         return <article key={item.talentId} className="rounded-3xl border border-slate-200 bg-white p-6"><p className="text-xs font-bold tracking-widest text-slate-500 uppercase">{definition.category}</p><h3 className="mt-3 text-2xl font-semibold">{definition.nameZh}</h3><p className="mt-3 leading-7 text-slate-600">{definition.description}</p><div className="mt-5 rounded-2xl bg-slate-50 p-4"><p className="text-xs font-bold text-slate-500">你的作答證據</p><p className="mt-2 text-sm leading-6">{evidence}</p></div><p className="mt-5 text-sm leading-6"><strong>這在工作上代表：</strong>{workMeaningForTalent(item.talentId)}</p></article>;
       })}</div><Link to="/talents" className="mt-5 inline-block font-semibold underline decoration-blue-300 decoration-2 underline-offset-4">查看完整能力分析 →</Link></section>
 
-      <section>{sectionTitle('03', '你的職涯結果')}<p className="mb-8 max-w-3xl leading-7 text-slate-600">先看通俗的職涯方向，再視需要展開底層細職業。分類依你自己的相對排序、能力證據、興趣、環境摩擦、能量風險與信心共同判斷，不是用固定分數切線。</p><div className="space-y-14">
-        <PublicCareerTier title="非常適合" subtitle="在目前收錄的工作中，這些方向與你有多項直接能力證據重疊，且沒有明顯的大型環境或能量衝突。" results={primaryStrong} empty="目前沒有方向同時通過全部高證據門檻；這不代表你沒有適合的工作。" />
-        <PublicCareerTier title="普通" subtitle="有些地方適合，但也有需要確認的條件；這裡的「普通」不是指你的能力普通。" results={primaryModerate} empty="目前沒有需要放在這一層的代表方向。" />
-        <PublicCareerTier title="較不適合目前的你" subtitle="不是做不到，而是目前測出的能力、偏好或工作能量與這些方向有較多、有證據的落差。" results={primaryLower} empty="目前沒有足夠證據把任何方向判為明顯較不適合，因此不會硬塞結果。" />
+      <section>{sectionTitle('03', '你的職涯結果')}<div className="mb-9 max-w-4xl rounded-3xl bg-blue-50 p-6"><p className="text-lg font-semibold leading-8">{careerSummary}</p><p className="mt-2 text-sm leading-6 text-slate-600">分類依你的相對排名、核心能力正向證據、興趣、環境摩擦、能量風險與信心共同判斷，不使用固定分數切線。</p></div><div className="space-y-14">
+        {primaryStrong.length > 0
+          ? <PublicCareerTier title="非常適合" subtitle="目前證據支持較完整，而且沒有明顯的大型環境或能量衝突。" results={primaryStrong} />
+          : exploratoryFallback.length > 0 && <PublicCareerTier title="目前較值得探索的方向" subtitle="以下方向在本站目前收錄的職業中相對靠前，但能力證據還沒有集中到足以稱為非常適合。" results={exploratoryFallback} />}
+        {primaryStrong.length > 0 && primaryModerate.length > 0 && <PublicCareerTier title="普通" subtitle="部分符合，也有需要考慮或繼續確認的地方；這裡的「普通」不是指你的能力普通。" results={primaryModerate} />}
+        {primaryLower.length > 0 && <PublicCareerTier title="較不適合目前的你" subtitle="目前存在較明顯、且有足夠證據支持的能力、偏好或能量落差；不是在說你做不到。" results={primaryLower} />}
       </div><Link to="/careers" className="mt-9 inline-block rounded-full border border-slate-400 px-5 py-3 text-sm font-semibold">查看完整 60 個職業分析 →</Link></section>
 
       <section>{sectionTitle('04', '先比較這幾種工作活動')}<div className="mb-7 max-w-3xl rounded-3xl bg-slate-100 p-5"><p className="text-sm font-bold text-slate-600">Decision Clarity · {priority ? decisionClarityLabels[priority.decisionClarity] : '計算中'}</p><p className="mt-2 leading-7">{priority?.interpretation}</p><p className="mt-2 text-sm leading-6 text-slate-600">Career Fit 是 60 種工作與你目前 Profile 的相對吻合指標，不是成功機率、錄取機率、能力百分比或考試分數。</p></div><p className="mb-7 max-w-3xl leading-7 text-slate-600">{evidenceBacked ? '我們先把相近的工作活動聚在一起。差距在同一 proximity cluster 的方向會使用相同優先層級，不製造不存在的第一、第二名。' : '目前 Career Match 的可追溯證據不足，系統不會說你什麼都不適合，也不會假裝知道哪個最好。先比較工作活動，再用 20 分鐘體驗收集新證據。'}</p><div className="grid gap-5 lg:grid-cols-3">{directions.map((direction) => <DirectionCard key={direction.id} direction={direction} selected={selected?.id === direction.id} onSelect={() => { selectCareerDirection(direction.id); setShowGuided(false); }} />)}</div></section>
@@ -125,19 +134,17 @@ export function ResultsPage() {
   </main>;
 }
 
-function PublicCareerTier({ title, subtitle, results, empty }: { title: string; subtitle: string; results: ReturnType<typeof interpretPublicCareers>['all']; empty: string }) {
+function PublicCareerTier({ title, subtitle, results }: { title: string; subtitle: string; results: ReturnType<typeof interpretPublicCareers>['all'] }) {
   return <section aria-labelledby={`career-tier-${title}`}>
     <h3 id={`career-tier-${title}`} className="text-2xl font-semibold sm:text-3xl">{title}</h3>
     <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">{subtitle}</p>
-    {results.length > 0
-      ? <div className="mt-6 grid gap-5">{results.map((result) => <PublicCareerCard key={result.publicCareerId} result={result} />)}</div>
-      : <p className="mt-5 rounded-2xl bg-slate-50 p-5 text-sm leading-6 text-slate-600">{empty}</p>}
+    <div className="mt-6 grid gap-5">{results.map((result) => <PublicCareerCard key={result.publicCareerId} result={result} />)}</div>
   </section>;
 }
 
 function DirectionCard({ direction, selected, onSelect }: { direction: PrioritizedCareerDirection; selected: boolean; onSelect: () => void }) {
   const careers = direction.careerIds.map((id) => CAREER_PROFILES.find((career) => career.id === id)).filter(Boolean);
-  return <article className={`flex h-full flex-col rounded-3xl border bg-white p-6 ${selected ? 'border-slate-950 ring-2 ring-slate-950' : 'border-slate-200'}`}><p className="mb-3 w-fit rounded-full bg-blue-100 px-3 py-1 text-xs font-bold">{priorityLabels[direction.explorationPriority]}</p><h3 className="text-2xl font-semibold">{direction.title}</h3><p className="mt-3 text-sm leading-6 text-slate-600">{direction.description}</p><div className="mt-5"><p className="text-xs font-bold text-slate-500">代表工作</p><p className="mt-2 text-sm leading-6">{careers.slice(0, 3).map((career) => career!.titleZh).join('、')}</p></div><div className="mt-5"><p className="text-xs font-bold text-slate-500">共同工作模式</p><div className="mt-2 flex flex-wrap gap-2">{direction.sharedWorkPatterns.map((pattern) => <span key={pattern} className="rounded-full bg-slate-100 px-3 py-1 text-xs">{pattern}</span>)}</div></div><div className="mt-5"><p className="text-xs font-bold text-slate-500">共同能力</p><p className="mt-2 text-sm leading-6">{direction.sharedTalents.slice(0, 3).map((id) => BASE_TALENTS.find((talent) => talent.id === id)?.nameZh).join('、')}</p></div><p className="mt-5 text-sm text-slate-700"><strong>可能摩擦：</strong>{direction.potentialFrictions[0] ?? '目前沒有明顯摩擦訊號。'}</p><details className="mt-5 rounded-2xl bg-slate-50 p-4"><summary className="cursor-pointer text-sm font-semibold">查看分析依據</summary><div className="mt-3 space-y-2 text-xs leading-5 text-slate-600"><p>Career Fit Index（代表工作平均）· {formatFitIndex(direction.averageFit)}</p><p>Confidence · {direction.confidence}</p><p>Entry Distance · {entryDistanceLabel[direction.entryDistanceRange.min]}–{entryDistanceLabel[direction.entryDistanceRange.max]}</p><p>Score Proximity Cluster · {direction.proximityCluster + 1}</p><p>Supporting evidence · {direction.supportingEvidence.length}</p><p>Career Fit 是相對吻合指標，不是適合度百分比。</p></div></details><button type="button" onClick={onSelect} className="mt-auto pt-6 text-left text-sm font-semibold underline decoration-blue-300 decoration-2 underline-offset-4">選這個方向 →</button></article>;
+  return <article className={`flex h-full flex-col rounded-3xl border bg-white p-6 ${selected ? 'border-slate-950 ring-2 ring-slate-950' : 'border-slate-200'}`}><p className="mb-3 w-fit rounded-full bg-blue-100 px-3 py-1 text-xs font-bold">{priorityLabels[direction.explorationPriority]}</p><h3 className="text-2xl font-semibold">{direction.title}</h3><p className="mt-3 text-sm leading-6 text-slate-600">{direction.description}</p><div className="mt-5"><p className="text-xs font-bold text-slate-500">代表工作</p><p className="mt-2 text-sm leading-6">{careers.slice(0, 3).map((career) => career!.titleZh).join('、')}</p></div><div className="mt-5"><p className="text-xs font-bold text-slate-500">共同工作模式</p><div className="mt-2 flex flex-wrap gap-2">{direction.sharedWorkPatterns.map((pattern) => <span key={pattern} className="rounded-full bg-slate-100 px-3 py-1 text-xs">{pattern}</span>)}</div></div><div className="mt-5"><p className="text-xs font-bold text-slate-500">共同能力</p><p className="mt-2 text-sm leading-6">{direction.sharedTalents.slice(0, 3).map((id) => BASE_TALENTS.find((talent) => talent.id === id)?.nameZh).join('、')}</p></div><p className="mt-5 text-sm text-slate-700"><strong>可能摩擦：</strong>{direction.potentialFrictions[0] ?? '目前沒有明顯摩擦訊號。'}</p><details className="mt-5 rounded-2xl bg-slate-50 p-4"><summary className="cursor-pointer text-sm font-semibold">查看分析依據</summary><div className="mt-3 space-y-2 text-xs leading-5 text-slate-600"><p>Career Fit Index（代表工作平均）· {formatFitIndex(direction.averageFit)}</p><p>Confidence · {direction.confidence}</p><p>Entry Distance · 背景資料不足</p><p>Score Proximity Cluster · {direction.proximityCluster + 1}</p><p>Supporting evidence · {direction.supportingEvidence.length}</p><p>Career Fit 是相對吻合指標，不是適合度百分比。</p></div></details><button type="button" onClick={onSelect} className="mt-auto pt-6 text-left text-sm font-semibold underline decoration-blue-300 decoration-2 underline-offset-4">選這個方向 →</button></article>;
 }
 
 function directionReasons(direction: PrioritizedCareerDirection) {
@@ -153,5 +160,5 @@ function DeepDive({ talentProfile, careerResults }: { talentProfile: NonNullable
   const composites = [...talentProfile.compositeTalents].sort((a, b) => b.score - a.score);
   const drains = talentProfile.baseTalents.filter((item) => item.energyScore !== null && item.energyScore < 0);
   const card = (match: (typeof careerResults.matches)[number], mode: 'career' | 'surprise') => <CareerCard key={match.careerId} match={match} rank={careerResults.matches.findIndex(({ careerId }) => careerId === match.careerId) + 1} total={careerResults.matches.length} feedbackMode={mode} feedbackValue={mode === 'career' ? state.betaFeedback.careerFeedback.find(({ careerId }) => careerId === match.careerId)?.response : state.betaFeedback.surpriseFeedback.find(({ careerId }) => careerId === match.careerId)?.response} onFeedback={(value) => mode === 'career' ? saveCareerFeedback(match.careerId, value as CareerFeedbackChoice) : saveSurpriseFeedback(match.careerId, value as SurpriseFeedbackChoice)} />;
-  return <><section><h3 className="text-2xl font-semibold">Composite Talents</h3><div className="mt-4 grid gap-4 md:grid-cols-2">{composites.map((item) => { const definition = COMPOSITE_TALENTS.find(({ id }) => id === item.compositeTalentId)!; return <article key={item.compositeTalentId} className="rounded-2xl bg-slate-50 p-5"><h4 className="font-semibold">{definition.nameZh}</h4><p className="mt-2 text-sm text-slate-600">{definition.shortDescription}</p></article>; })}</div></section><section><h3 className="text-2xl font-semibold">完整 Career Matches</h3><p className="mt-2 text-sm text-slate-600">原始 Career Fit 與相對排名保留在分析依據中，不作為主要決策畫面。</p><div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">{careerResults.matches.slice(0, 8).map((match) => card(match, 'career'))}</div><Link to="/careers" className="mt-4 inline-block font-semibold underline">查看所有職業結果 →</Link></section><section><h3 className="text-2xl font-semibold">Surprise Matches</h3><div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">{careerResults.categories.surprise_me.map((match) => card(match, 'surprise'))}</div>{!careerResults.categories.surprise_me.length && <p className="mt-3 text-slate-600">目前沒有跨過 Surprise Match 證據門檻的結果。</p>}</section><section><h3 className="text-2xl font-semibold">可能消耗你的模式</h3><div className="mt-4 grid gap-3 md:grid-cols-2">{drains.map((item) => <div key={item.talentId} className="rounded-2xl bg-slate-100 p-5"><strong>{BASE_TALENTS.find(({ id }) => id === item.talentId)?.nameZh}</strong><p className="mt-2 text-sm text-slate-600">做得到，但高密度使用時可能消耗能量。</p></div>)}</div>{!drains.length && <p className="mt-3 text-slate-600">目前沒有足夠強的能量消耗訊號。</p>}</section><div className="flex flex-wrap gap-4"><Link to="/talents" className="font-semibold underline">完整 Talent Landscape</Link><Link to="/methodology" className="font-semibold underline">評分與方法說明</Link></div></>;
+  return <><section><h3 className="text-2xl font-semibold">Composite Talents</h3><div className="mt-4 grid gap-4 md:grid-cols-2">{composites.map((item) => { const definition = COMPOSITE_TALENTS.find(({ id }) => id === item.compositeTalentId)!; return <article key={item.compositeTalentId} className="rounded-2xl bg-slate-50 p-5"><h4 className="font-semibold">{definition.nameZh}</h4><p className="mt-2 text-sm text-slate-600">{definition.shortDescription}</p></article>; })}</div></section><section><h3 className="text-2xl font-semibold">完整 Career Matches</h3><p className="mt-2 text-sm text-slate-600">原始 Career Fit 與相對排名保留在分析依據中，不作為主要決策畫面。</p><div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">{careerResults.matches.slice(0, 8).map((match) => card(match, 'career'))}</div><Link to="/careers" className="mt-4 inline-block font-semibold underline">查看所有職業結果 →</Link></section>{careerResults.categories.surprise_me.length > 0 && <section><h3 className="text-2xl font-semibold">你可能沒想過的方向</h3><div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">{careerResults.categories.surprise_me.map((match) => card(match, 'surprise'))}</div></section>}<section><h3 className="text-2xl font-semibold">可能消耗你的模式</h3><div className="mt-4 grid gap-3 md:grid-cols-2">{drains.map((item) => <div key={item.talentId} className="rounded-2xl bg-slate-100 p-5"><strong>{BASE_TALENTS.find(({ id }) => id === item.talentId)?.nameZh}</strong><p className="mt-2 text-sm text-slate-600">做得到，但高密度使用時可能消耗能量。</p></div>)}</div>{!drains.length && <p className="mt-3 text-slate-600">目前沒有足夠強的能量消耗訊號。</p>}</section><div className="flex flex-wrap gap-4"><Link to="/talents" className="font-semibold underline">完整 Talent Landscape</Link><Link to="/methodology" className="font-semibold underline">評分與方法說明</Link></div></>;
 }

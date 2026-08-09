@@ -31,7 +31,8 @@ describe('relative public career fit interpretation', () => {
         expect(career.confidence).not.toBe('low');
         expect(career.environmentFriction).not.toBe('high');
         expect(career.energyRisk).not.toBe('high');
-        expect(career.abilityAlignment.filter(({ alignment }) => alignment === 'strong').length).toBeGreaterThanOrEqual(2);
+        expect(career.positiveEvidenceGate.passed).toBe(true);
+        expect(career.abilityAlignment.filter(({ alignment }) => alignment === 'strong_alignment' || alignment === 'moderate_alignment').length).toBeGreaterThanOrEqual(2);
       }
     }
   });
@@ -41,7 +42,7 @@ describe('relative public career fit interpretation', () => {
       const pipeline = runCareerDiscoveryPipeline(profile.responses);
       const result = interpretPublicCareers({ matches: pipeline.matches, talentProfile: pipeline.talentProfile, responses: profile.responses });
       for (const career of result.lower) {
-        const weakCount = career.abilityAlignment.filter(({ alignment }) => alignment === 'weak').length;
+        const weakCount = career.abilityAlignment.filter(({ alignment }) => alignment === 'low_overlap').length;
         expect(career.relativePercentile).toBeLessThanOrEqual(0.3);
         expect(career.environmentFriction === 'high' || career.energyRisk === 'high' || weakCount >= 2 || (career.interestAlignment < 0.38 && career.workStyleAlignment < 0.5)).toBe(true);
         expect(career.limitingReasons.length).toBeGreaterThan(0);
@@ -83,7 +84,7 @@ describe('relative public career fit interpretation', () => {
 
     expect(updated.energyRisk).toBe('high');
     expect(updated.classification).not.toBe('strong');
-    expect(updated.abilityAlignment.filter(({ talentId }) => demanded.includes(talentId)).some(({ alignment }) => alignment === 'strong')).toBe(true);
+    expect(updated.abilityAlignment.filter(({ talentId }) => demanded.includes(talentId)).some(({ alignment }) => alignment === 'strong_alignment' || alignment === 'moderate_alignment')).toBe(true);
     expect(updated.limitingReasons.some((reason) => reason.includes('做得到') && reason.includes('能量'))).toBe(true);
   });
 

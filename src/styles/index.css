@@ -70,7 +70,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .app-surface { background: #f5f7fa; color: #17202b; }
 .career-card-polished { transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease; }.career-card-polished:hover { transform: translateY(-5px); border-color: rgb(23 32 43 / .22); box-shadow: 0 28px 65px -45px rgb(23 32 43 / .65); }
 .assessment-option { transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease; }.assessment-option:hover { transform: translateY(-2px); }.assessment-option:active { transform: translateY(0) scale(.99); }
-.result-tab { transition: background .2s ease, color .2s ease, transform .2s ease; }.result-tab:hover { transform: translateY(-1px); }
 
 @media (max-width: 767px) {
   .editorial-shell { width: min(100% - 1.25rem, 88rem); }

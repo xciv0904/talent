@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { CAREER_PROFILES } from '../data/careers';
 import { careerDirectionForFamily } from '../engine';
 import type { CareerFeedbackChoice, CareerMatchResult, SurpriseFeedbackChoice } from '../types';
-import { careerMatchReasons, entryDistanceLabel, formatFitIndex } from '../utils';
+import { formatFitIndex } from '../utils';
 
 const careerFeedbackOptions: Array<[CareerFeedbackChoice, string]> = [
   ['strong_fit', '很符合我'], ['already_considered', '我有考慮過'], ['unexpected_interested', '沒想過，但想了解'],
@@ -27,7 +27,7 @@ export function CareerCard({ match, compact = false, feedbackMode, feedbackValue
   const career = CAREER_PROFILES.find(({ id }) => id === match.careerId);
   if (!career) return null;
   const direction = careerDirectionForFamily(career.family);
-  const relativeLabel = rank ? rank <= 10 ? '值得探索' : rank <= 20 ? '可以保留比較' : '目前不是優先' : '值得了解';
+  const relativeLabel = rank ? rank <= 5 ? '相對排名靠前' : rank <= 15 ? '可進一步比較' : rank <= 30 ? '中段結果' : '目前不是優先' : '細職業資料';
   return (
     <article className="career-card-polished flex h-full min-w-0 flex-col rounded-[1.75rem] border border-ink/10 bg-white/75 p-5 shadow-[0_16px_50px_-40px_rgba(24,35,31,.5)] sm:p-6">
       <div className="flex items-start justify-between gap-4">
@@ -41,15 +41,17 @@ export function CareerCard({ match, compact = false, feedbackMode, feedbackValue
       <p className="mt-4 text-sm leading-6 text-slate-600">{career.description}</p>
       {!compact && (
         <>
-          <p className="mt-5 text-sm font-semibold">為什麼值得你了解</p><ul className="mt-3 space-y-2 text-sm text-slate-700">
-            {careerMatchReasons(match).map((reason) => <li key={reason} className="flex gap-2 leading-6"><span className="text-coral">↳</span>{reason}</li>)}
+          <p className="mt-5 text-sm font-semibold">主要比對指標</p><ul className="mt-3 space-y-2 text-sm text-slate-700">
+            <li className="leading-6">Talent Match · {formatFitIndex(match.talentMatch)}</li>
+            <li className="leading-6">Interest Match · {formatFitIndex(match.interestMatch)}</li>
+            <li className="leading-6">Work Style Match · {formatFitIndex(match.workStyleMatch)}</li>
           </ul>
           <p className="mt-4 text-sm text-slate-700"><strong>主要工作：</strong>{career.coreTasks[0]}</p>
           <p className="mt-4 text-sm text-slate-700"><strong>Potential friction：</strong>{match.potentialFrictions[0] ?? '目前沒有明顯摩擦訊號。'}</p>
           {feedbackMode && onFeedback && <div className="mt-5 border-t border-ink/10 pt-4"><p className="text-sm font-semibold">{feedbackMode === 'surprise' ? '這個意外方向對你來說是？' : '你怎麼看這個推薦？'}</p><div className="mt-3 flex flex-wrap gap-2">{(feedbackMode === 'surprise' ? surpriseFeedbackOptions : careerFeedbackOptions).map(([value, label]) => <button key={value} type="button" aria-pressed={feedbackValue === value} onClick={() => onFeedback(value)} className={`rounded-full border px-3 py-2 text-left text-xs leading-4 ${feedbackValue === value ? 'border-ink bg-ink text-white' : 'border-ink/15 bg-white text-ink/65'}`}>{label}</button>)}</div></div>}
         </>
       )}
-      <details className="mt-5 rounded-2xl bg-slate-50 p-4"><summary className="cursor-pointer text-xs font-semibold">查看分析依據</summary><div className="mt-3 space-y-2 text-xs leading-5 text-slate-600">{rank && <p>在目前收錄的 {total} 種工作中，位於你的前 {rank} 名。</p>}<p>Career Fit Index · {formatFitIndex(match.matchScore)}</p><p>Confidence · {match.confidence}</p><p>Entry Distance · {entryDistanceLabel[match.entryDistance.level]}</p><p>Talent / Interest / Work Style · {formatFitIndex(match.talentMatch)} / {formatFitIndex(match.interestMatch)} / {formatFitIndex(match.workStyleMatch)}</p><p>Environment / Values · {formatFitIndex(match.environmentMatch)} / {formatFitIndex(match.valuesMatch)}</p><p>Career Fit 是相對吻合指標，不是成功、錄取或適合度百分比。</p></div></details>
+      <details className="mt-5 rounded-2xl bg-slate-50 p-4"><summary className="cursor-pointer text-xs font-semibold">查看分析依據</summary><div className="mt-3 space-y-2 text-xs leading-5 text-slate-600">{rank && <p>在目前收錄的 {total} 種工作中，位於你的前 {rank} 名。</p>}<p>Career Fit Index · {formatFitIndex(match.matchScore)}</p><p>Confidence · {match.confidence}</p><p>Entry Distance · 背景資料不足</p><p>Talent / Interest / Work Style · {formatFitIndex(match.talentMatch)} / {formatFitIndex(match.interestMatch)} / {formatFitIndex(match.workStyleMatch)}</p><p>Environment / Values · {formatFitIndex(match.environmentMatch)} / {formatFitIndex(match.valuesMatch)}</p><p>Career Fit 是相對吻合指標，不是成功、錄取或適合度百分比。</p></div></details>
       <Link to={`/career/${career.id}`} className="mt-auto pt-6 text-sm font-semibold text-ink underline decoration-coral decoration-2 underline-offset-4">深入了解這份工作 →</Link>
     </article>
   );

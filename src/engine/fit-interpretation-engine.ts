@@ -11,9 +11,14 @@ import type {
   PublicCareerGroup,
   PublicCareerInterpretation,
   PublicCareerResults,
+  PositiveEvidenceGateResult,
   Question,
   QuestionResponse,
+  RecommendationSource,
+  RecommendationStrength,
+  SpecificCareerInterpretation,
   TalentId,
+  TalentRequirementImportance,
   TalentScore,
   UserSignalLevel,
   UserTalentProfile,
@@ -83,74 +88,92 @@ function signalLevel(talent: TalentScore): UserSignalLevel {
   return 'low';
 }
 
-function alignmentLevel(level: UserSignalLevel, score: number, demand: number): AbilityAlignment['alignment'] {
+function alignmentLevel(
+  level: UserSignalLevel,
+  score: number,
+  demand: number,
+  positiveEvidenceCount: number,
+): AbilityAlignment['alignment'] {
   if (level === 'insufficient_evidence') return 'insufficient_evidence';
-  if (level === 'high' && score >= demand * 0.72) return 'strong';
-  if ((level === 'high' || level === 'moderate') && score >= demand * 0.5) return 'moderate';
-  return 'weak';
+  if (level === 'high' && score >= demand * 0.72 && positiveEvidenceCount >= 2) return 'strong_alignment';
+  if ((level === 'high' || level === 'moderate') && score >= demand * 0.5 && positiveEvidenceCount >= 1) return 'moderate_alignment';
+  return 'low_overlap';
 }
 
-function relevantTasks(group: PublicCareerGroup, talentId: TalentId) {
-  const plainTasks = [...group.dailyTasks];
-  const words = TALENT_TASK_WORDS[talentId];
-  const ranked = plainTasks
-    .map((task, index) => ({ task, index, hits: words.filter((word) => task.includes(word)).length }))
-    .sort((a, b) => b.hits - a.hits || a.index - b.index);
-  const matched = ranked.filter(({ hits }) => hits > 0).map(({ task }) => task);
-  return [...new Set(matched.length ? matched : plainTasks)].slice(0, 2);
+function importanceBands(requirements: ReadonlyMap<TalentId, number>) {
+  const sorted = [...requirements.entries()].sort(([, a], [, b]) => b - a);
+  const maximum = sorted[0]?.[1] ?? 0;
+  return new Map(sorted.map(([talentId, demand], index): [TalentId, TalentRequirementImportance] => [
+    talentId,
+    index < 2 || demand >= maximum * 0.82 ? 'core' : index < 4 || demand >= maximum * 0.58 ? 'supporting' : 'minor',
+  ]));
 }
 
-function buildAbilityAlignments(
-  group: PublicCareerGroup,
+function buildAbilityAlignmentsFromRequirements(
+  requirements: ReadonlyMap<TalentId, number>,
+  tasks: readonly string[],
   talentScores: readonly TalentScore[],
-  profiles: readonly CareerProfile[],
   responses: readonly QuestionResponse[],
   questions: readonly Question[],
 ): AbilityAlignment[] {
-  const requirements = new Map<TalentId, { maximum: number; total: number; occurrences: number }>();
-  for (const profile of profiles) {
-    for (const [talentId, demand] of Object.entries(profile.talentRequirements) as Array<[TalentId, number]>) {
-      const current = requirements.get(talentId) ?? { maximum: 0, total: 0, occurrences: 0 };
-      current.maximum = Math.max(current.maximum, demand);
-      current.total += demand;
-      current.occurrences += 1;
-      requirements.set(talentId, current);
-    }
-  }
+  const importanceByTalent = importanceBands(requirements);
 
   return [...requirements.entries()]
-    .flatMap(([talentId, requirement]): AbilityAlignment[] => {
+    .flatMap(([talentId, careerDemand]): AbilityAlignment[] => {
       const talent = talentScores.find((item) => item.talentId === talentId);
       const definition = BASE_TALENTS.find((item) => item.id === talentId);
       if (!talent || !definition) return [];
-      const frequency = requirement.occurrences / profiles.length;
-      const careerDemand = requirement.maximum * (0.75 + frequency * 0.25);
       const level = signalLevel(talent);
-      const alignment = alignmentLevel(level, talent.score, careerDemand);
-      const positiveEvidence = talent.evidence.filter(({ source, description }) => source === 'question' && description.length > 0);
+      const positiveEvidence = talent.evidence.filter(({ description, strength }) => description.length > 0 && strength > 0);
+      const independentPositiveEvidence = new Set(positiveEvidence.map(({ questionId, id }) => questionId ?? id));
+      const alignment = alignmentLevel(level, talent.score, careerDemand, independentPositiveEvidence.size);
       const userEvidence = (positiveEvidence.length
         ? positiveEvidence
         : responseEvidenceForTalent(talentId, responses, questions)).slice(0, 3);
-      const tasks = relevantTasks(group, talentId);
-      const evidenceText = userEvidence[0]?.description ?? '目前沒有足夠的跨題作答證據。';
+      const taskWords = TALENT_TASK_WORDS[talentId];
+      const rankedTasks = tasks
+        .map((task, index) => ({ task, index, hits: taskWords.filter((word) => task.includes(word)).length }))
+        .sort((a, b) => b.hits - a.hits || a.index - b.index);
+      const matchedTasks = rankedTasks.filter(({ hits }) => hits > 0).map(({ task }) => task);
+      const relevantCareerTasks = [...new Set(matchedTasks.length ? matchedTasks : tasks)].slice(0, 2);
+      const evidenceText = positiveEvidence[0]?.description ?? '目前的作答還沒有在足夠多種情境中形成一致訊號。';
       const explanation = alignment === 'insufficient_evidence'
-        ? `目前測驗還沒有足夠、跨方法一致的證據判斷「${definition.nameZh}」，因此不能把未知當成能力不足。這類工作會在「${tasks[0]}」使用它。`
-        : alignment === 'weak'
-          ? `在已提供足夠作答機會的題目中，「${definition.nameZh}」沒有反覆成為你的主要反應；而這類工作會在「${tasks[0]}」經常使用它。這表示目前的自然反應重疊較少，不代表你做不到。`
-          : `${evidenceText} 這些作答形成「${definition.nameZh}」的${alignment === 'strong' ? '明確' : '部分'}訊號；這類工作會在「${tasks.join('」與「')}」使用這項能力，因此${alignment === 'strong' ? '你較可能在這些日常任務中自然發揮' : '有實際重疊，但仍值得用真實任務確認'}。`;
+        ? `這份工作會在「${relevantCareerTasks[0]}」使用「${definition.nameZh}」；目前測驗還沒有足夠不同情境的回答，判斷它是不是你的穩定優勢。`
+        : alignment === 'low_overlap'
+          ? `目前在不同情境裡，「${definition.nameZh}」較少成為你的自然反應；而這份工作會在「${relevantCareerTasks[0]}」經常使用它。這代表需要額外適應，不等於你做不到。`
+          : `${evidenceText} 這些作答形成「${definition.nameZh}」的${alignment === 'strong_alignment' ? '明確' : '部分'}訊號。這份工作會在「${relevantCareerTasks.join('」與「')}」使用它，因此這項能力${alignment === 'strong_alignment' ? '是推薦此方向的重要依據' : '對推薦提供部分支持'}。`;
       return [{
         talentId,
         talentName: definition.nameZh,
         userEvidence,
         userSignalLevel: level,
         careerDemand,
-        relevantCareerTasks: tasks,
+        importance: importanceByTalent.get(talentId) ?? 'minor',
+        relevantCareerTasks,
         alignment,
         explanation,
       }];
     })
     .sort((a, b) => b.careerDemand - a.careerDemand)
     .slice(0, 5);
+}
+
+function publicRequirements(profiles: readonly CareerProfile[]) {
+  const values = new Map<TalentId, { maximum: number; occurrences: number }>();
+  for (const profile of profiles) {
+    for (const [talentId, demand] of Object.entries(profile.talentRequirements) as Array<[TalentId, number]>) {
+      const current = values.get(talentId) ?? { maximum: 0, occurrences: 0 };
+      values.set(talentId, { maximum: Math.max(current.maximum, demand), occurrences: current.occurrences + 1 });
+    }
+  }
+  return new Map([...values.entries()].map(([talentId, value]) => [
+    talentId,
+    value.maximum * (0.75 + value.occurrences / profiles.length * 0.25),
+  ]));
+}
+
+function careerRequirements(profile: CareerProfile) {
+  return new Map(Object.entries(profile.talentRequirements) as Array<[TalentId, number]>);
 }
 
 function riskFromEnvironment(matches: readonly CareerMatchResult[]): InterpretationRiskLevel {
@@ -173,6 +196,134 @@ function riskFromEnergy(profiles: readonly CareerProfile[], talentScores: readon
 function aggregateConfidence(matches: readonly CareerMatchResult[]): ConfidenceLevel {
   const score = average(matches.map((match) => confidenceRank[match.confidence]));
   return score >= 1.5 ? 'high' : score >= 0.75 ? 'medium' : 'low';
+}
+
+export function evaluatePositiveEvidenceGate(
+  alignments: readonly AbilityAlignment[],
+  confidence: ConfidenceLevel,
+  environmentFriction: InterpretationRiskLevel,
+  energyRisk: InterpretationRiskLevel,
+  specificCareerSupportBreadth = 1,
+): PositiveEvidenceGateResult {
+  const positive = alignments.filter(({ alignment }) => alignment === 'strong_alignment' || alignment === 'moderate_alignment');
+  const corePositive = positive.filter(({ importance }) => importance === 'core');
+  const strongAlignmentCount = alignments.filter(({ alignment }) => alignment === 'strong_alignment').length;
+  const moderateAlignmentCount = alignments.filter(({ alignment }) => alignment === 'moderate_alignment').length;
+  const lowOverlapCount = alignments.filter(({ alignment }) => alignment === 'low_overlap').length;
+  const insufficientEvidenceCount = alignments.filter(({ alignment }) => alignment === 'insufficient_evidence').length;
+  const reasons: string[] = [];
+  if (positive.length < 2) reasons.push('核心能力中少於兩項具有直接正向作答證據。');
+  if (corePositive.length < 1) reasons.push('最高重要性的能力目前沒有直接正向支持。');
+  if (confidence === 'low') reasons.push('目前分析信心不足以支持強烈推薦。');
+  if (environmentFriction === 'high') reasons.push('存在重大的工作環境摩擦。');
+  if (energyRisk === 'high') reasons.push('存在重大的能量消耗風險。');
+  if (specificCareerSupportBreadth < 0.5) reasons.push('分組內具有正向能力支持的細職業不足一半。');
+  const passed = reasons.length === 0;
+  const absoluteEvidenceQuality = passed && strongAlignmentCount >= 1
+    ? 'strong'
+    : positive.length >= 2 && corePositive.length >= 1
+      ? 'moderate'
+      : insufficientEvidenceCount >= Math.ceil(alignments.length / 2)
+        ? 'insufficient'
+        : 'weak';
+  return {
+    passed,
+    absoluteEvidenceQuality,
+    positiveAlignmentCount: positive.length,
+    corePositiveAlignmentCount: corePositive.length,
+    strongAlignmentCount,
+    moderateAlignmentCount,
+    lowOverlapCount,
+    insufficientEvidenceCount,
+    specificCareerSupportBreadth,
+    reasons,
+  };
+}
+
+interface RecommendationDecisionInput {
+  relativePercentile: number;
+  fitSeparation: number;
+  evidenceGate: PositiveEvidenceGateResult;
+  interestAlignment: number;
+  workStyleAlignment: number;
+  environmentFriction: InterpretationRiskLevel;
+  energyRisk: InterpretationRiskLevel;
+  explicitMismatch: boolean;
+}
+
+export function decideRecommendation(input: RecommendationDecisionInput): {
+  classification: PublicCareerInterpretation['classification'];
+  recommendationStrength: RecommendationStrength;
+  recommendationSource: RecommendationSource;
+} {
+  const abilitySupport = input.evidenceGate.positiveAlignmentCount >= 2;
+  const interestSupport = input.interestAlignment >= 0.55;
+  const environmentSupport = input.workStyleAlignment >= 0.55 && input.environmentFriction === 'low';
+  const recommendationSource: RecommendationSource = abilitySupport && (interestSupport || environmentSupport)
+    ? 'mixed'
+    : abilitySupport
+      ? 'ability_led'
+      : interestSupport
+        ? 'interest_led'
+        : environmentSupport
+          ? 'environment_led'
+          : 'weak_relative';
+  const strong = input.relativePercentile >= 0.75
+    && input.fitSeparation >= 0.015
+    && input.evidenceGate.passed
+    && input.interestAlignment >= 0.4
+    && input.workStyleAlignment >= 0.4;
+  const lower = input.relativePercentile <= 0.3
+    && input.fitSeparation <= -0.015
+    && input.explicitMismatch;
+  if (strong) return { classification: 'strong', recommendationStrength: 'strong_recommendation', recommendationSource };
+  if (lower) return { classification: 'lower', recommendationStrength: 'not_priority', recommendationSource };
+  const recommendationStrength: RecommendationStrength = input.evidenceGate.positiveAlignmentCount > 0
+    ? 'moderate_recommendation'
+    : 'exploratory';
+  return { classification: 'moderate', recommendationStrength, recommendationSource };
+}
+
+function buildRecommendationReasons(
+  alignments: readonly AbilityAlignment[],
+  interestAlignment: number,
+  workStyleAlignment: number,
+  environmentFriction: InterpretationRiskLevel,
+) {
+  const reasons = alignments
+    .filter(({ alignment }) => alignment === 'strong_alignment' || alignment === 'moderate_alignment')
+    .sort((a, b) => (a.importance === 'core' ? -1 : 0) - (b.importance === 'core' ? -1 : 0) || b.careerDemand - a.careerDemand)
+    .slice(0, 2)
+    .map(({ talentName, relevantCareerTasks }) => `你的「${talentName}」有直接作答支持，會用在「${relevantCareerTasks[0]}」。`);
+  if (interestAlignment >= 0.55) reasons.push('你偏好的活動方向與這類工作的主要內容有明顯重疊。');
+  if (workStyleAlignment >= 0.55) reasons.push('這類工作的日常做事方式接近你目前偏好的方式。');
+  if (environmentFriction === 'low') reasons.push('主要工作環境要求大致落在你目前可接受的範圍。');
+  return reasons.slice(0, 3);
+}
+
+function buildLimitingReasons(
+  alignments: readonly AbilityAlignment[],
+  classification: PublicCareerInterpretation['classification'],
+  interestAlignment: number,
+  workStyleAlignment: number,
+  environmentFriction: InterpretationRiskLevel,
+  energyRisk: InterpretationRiskLevel,
+  evidenceGate: PositiveEvidenceGateResult,
+) {
+  const reasons: string[] = [];
+  if (environmentFriction === 'high') reasons.push('工作環境有一項以上的要求明顯高於你目前的耐受範圍。');
+  else if (environmentFriction === 'moderate') reasons.push('部分工作環境要求與你的偏好有落差，需要查看實際職位。');
+  if (energyRisk === 'high') reasons.push('這類工作會高頻使用目前顯示明顯能量消耗的能力；你可能做得到，但長期使用可能較累。');
+  else if (energyRisk === 'moderate') reasons.push('其中一項常用能力可能帶來能量消耗，需要留意使用頻率。');
+  for (const item of alignments.filter(({ alignment, importance }) => alignment === 'low_overlap' && importance !== 'minor').slice(0, 2)) {
+    reasons.push(`「${item.talentName}」有足夠作答機會但目前重疊較少，而它是這類工作的${item.importance === 'core' ? '核心' : '常用'}能力。`);
+  }
+  if (interestAlignment < 0.45) reasons.push('你目前表達的興趣與這類工作的主要活動重疊較少；這是興趣訊號，不是能力判斷。');
+  if (workStyleAlignment < 0.45) reasons.push('這類工作的日常做事方式與你目前偏好的方式有較多差異。');
+  const unknown = alignments.filter(({ alignment }) => alignment === 'insufficient_evidence');
+  if (unknown.length && classification !== 'lower') reasons.push(`「${unknown.slice(0, 2).map(({ talentName }) => talentName).join('、')}」尚待更多不同情境的回答確認。`);
+  if (classification === 'moderate' && !reasons.length) reasons.push(...evidenceGate.reasons.slice(0, 2));
+  return reasons;
 }
 
 interface InterpretPublicCareersInput {
@@ -204,12 +355,18 @@ export function interpretPublicCareers({
   }).sort((a, b) => b.groupScore - a.groupScore);
 
   const median = aggregates[Math.floor(aggregates.length / 2)]?.groupScore ?? 0;
+  const sortedSpecificMatches = [...matches].sort((a, b) => b.matchScore - a.matchScore);
+  const specificMedian = sortedSpecificMatches[Math.floor(sortedSpecificMatches.length / 2)]?.matchScore ?? 0;
   const count = aggregates.length;
   const all = aggregates.map((aggregate, index): PublicCareerInterpretation => {
     const { group, groupMatches, groupProfiles, groupScore } = aggregate;
-    const abilityAlignment = buildAbilityAlignments(group, talentProfile.baseTalents, groupProfiles, responses, questions);
-    const strongAbilities = abilityAlignment.filter(({ alignment }) => alignment === 'strong');
-    const weakAbilities = abilityAlignment.filter(({ alignment }) => alignment === 'weak');
+    const abilityAlignment = buildAbilityAlignmentsFromRequirements(
+      publicRequirements(groupProfiles),
+      group.dailyTasks,
+      talentProfile.baseTalents,
+      responses,
+      questions,
+    );
     const environmentFriction = riskFromEnvironment(groupMatches);
     const energyRisk = riskFromEnergy(groupProfiles, talentProfile.baseTalents);
     const confidence = aggregateConfidence(groupMatches);
@@ -218,50 +375,97 @@ export function interpretPublicCareers({
     const interestAlignment = average(groupMatches.map((match) => match.interestMatch));
     const workStyleAlignment = average(groupMatches.map((match) => match.workStyleMatch));
     const fitSeparation = groupScore - median;
-    const strongEligible = relativePercentile >= 0.75
-      && fitSeparation >= 0.015
-      && strongAbilities.length >= 2
-      && confidence !== 'low'
-      && interestAlignment >= 0.45
-      && workStyleAlignment >= 0.45
-      && environmentFriction !== 'high'
-      && energyRisk !== 'high';
-    const preferenceMismatch = interestAlignment < 0.38 && workStyleAlignment < 0.5;
-    const explicitMismatch = environmentFriction === 'high' || energyRisk === 'high' || weakAbilities.length >= 2 || preferenceMismatch;
-    const lowerEligible = relativePercentile <= 0.3 && fitSeparation <= -0.015 && explicitMismatch;
-    const classification = strongEligible ? 'strong' : lowerEligible ? 'lower' : 'moderate';
-
-    const matchingReasons = strongAbilities.slice(0, 3).map(({ talentName, relevantCareerTasks }) =>
-      `「${talentName}」有直接作答支持，會用在「${relevantCareerTasks[0]}」。`,
+    const specificEvidence = groupProfiles.map((profile) => {
+      const specificMatch = groupMatches.find(({ careerId }) => careerId === profile.id)!;
+      const specificAlignments = buildAbilityAlignmentsFromRequirements(
+        careerRequirements(profile),
+        profile.coreTasks,
+        talentProfile.baseTalents,
+        responses,
+        questions,
+      );
+      const positives = specificAlignments.filter(({ alignment }) => alignment === 'strong_alignment' || alignment === 'moderate_alignment');
+      const specificGate = evaluatePositiveEvidenceGate(
+        specificAlignments,
+        specificMatch.confidence,
+        riskFromEnvironment([specificMatch]),
+        riskFromEnergy([profile], talentProfile.baseTalents),
+      );
+      const specificIndex = sortedSpecificMatches.findIndex(({ careerId }) => careerId === profile.id);
+      const specificEnvironmentFriction = riskFromEnvironment([specificMatch]);
+      const specificEnergyRisk = riskFromEnergy([profile], talentProfile.baseTalents);
+      const specificCoreLowOverlap = specificAlignments.some(({ alignment, importance }) => alignment === 'low_overlap' && importance === 'core');
+      const specificDecision = decideRecommendation({
+        relativePercentile: sortedSpecificMatches.length <= 1 ? 1 : 1 - specificIndex / (sortedSpecificMatches.length - 1),
+        fitSeparation: specificMatch.matchScore - specificMedian,
+        evidenceGate: specificGate,
+        interestAlignment: specificMatch.interestMatch,
+        workStyleAlignment: specificMatch.workStyleMatch,
+        environmentFriction: specificEnvironmentFriction,
+        energyRisk: specificEnergyRisk,
+        explicitMismatch: specificEnvironmentFriction === 'high' || specificEnergyRisk === 'high' || specificCoreLowOverlap || (specificMatch.interestMatch < 0.38 && specificMatch.workStyleMatch < 0.5),
+      });
+      return {
+        careerId: profile.id,
+        positiveCount: positives.length,
+        corePositiveCount: positives.filter(({ importance }) => importance === 'core').length,
+        gatePassed: specificGate.passed,
+        strongRecommendation: specificDecision.recommendationStrength === 'strong_recommendation',
+        alignments: specificAlignments,
+      };
+    });
+    const supportedSpecificCareers = specificEvidence.filter(({ strongRecommendation }) => strongRecommendation);
+    const specificCareerSupportBreadth = supportedSpecificCareers.length / groupProfiles.length;
+    const positiveEvidenceGate = evaluatePositiveEvidenceGate(
+      abilityAlignment,
+      confidence,
+      environmentFriction,
+      energyRisk,
+      specificCareerSupportBreadth,
     );
-    if (talentOverlap >= 0.55 && !strongAbilities.length) matchingReasons.push('整體能力訊號與這類工作的部分核心要求有重疊，但個別能力仍需更多直接證據。');
-    if (interestAlignment >= 0.55) matchingReasons.push('你目前的興趣方向與這類工作的主要活動有重疊。');
-    if (workStyleAlignment >= 0.55) matchingReasons.push('這類工作的做事方式大致落在你目前偏好的範圍。');
-    if (environmentFriction === 'low') matchingReasons.push('這類工作的主要環境要求大致落在你目前可接受的範圍。');
-
-    const limitingReasons: string[] = [];
-    if (environmentFriction === 'high') limitingReasons.push('工作環境有一項以上的要求明顯高於你目前的耐受範圍。');
-    else if (environmentFriction === 'moderate') limitingReasons.push('部分工作環境要求與你的偏好有落差，需要查看實際職位。');
-    if (energyRisk === 'high') limitingReasons.push('這類工作高頻使用到目前顯示明顯能量消耗的能力；你可能做得到，但長期使用可能較累。');
-    else if (energyRisk === 'moderate') limitingReasons.push('其中一項常用能力可能帶來能量消耗，需要留意使用頻率。');
-    for (const item of weakAbilities.slice(0, 2)) limitingReasons.push(`「${item.talentName}」有足夠作答機會但目前重疊較少，而它是這類工作的常用能力。`);
-    if (interestAlignment < 0.45) limitingReasons.push('你目前表達的興趣與這類工作的主要活動重疊較少；這是興趣訊號，不是能力判斷。');
-    if (workStyleAlignment < 0.45) limitingReasons.push('這類工作的日常做事方式與你目前偏好的方式有較多差異。');
-    const unknown = abilityAlignment.filter(({ alignment }) => alignment === 'insufficient_evidence');
-    if (unknown.length && classification !== 'lower') limitingReasons.push(`「${unknown.slice(0, 2).map(({ talentName }) => talentName).join('、')}」目前證據不足，不能當成能力較弱。`);
-    if (classification === 'moderate' && !limitingReasons.length) {
-      limitingReasons.push('目前相對排序或直接支持的核心能力數量尚未同時達到「非常適合」的證據門檻。');
-    }
+    const preferenceMismatch = interestAlignment < 0.38 && workStyleAlignment < 0.5;
+    const coreLowOverlap = abilityAlignment.filter(({ alignment, importance }) => alignment === 'low_overlap' && importance === 'core').length;
+    const explicitMismatch = environmentFriction === 'high' || energyRisk === 'high' || coreLowOverlap >= 1 || preferenceMismatch;
+    const decision = decideRecommendation({
+      relativePercentile,
+      fitSeparation,
+      evidenceGate: positiveEvidenceGate,
+      interestAlignment,
+      workStyleAlignment,
+      environmentFriction,
+      energyRisk,
+      explicitMismatch,
+    });
+    const matchingReasons = buildRecommendationReasons(abilityAlignment, interestAlignment, workStyleAlignment, environmentFriction);
+    if (!matchingReasons.length && relativePercentile >= 0.7) matchingReasons.push('它在目前收錄的方向中相對靠前，但正向能力證據仍未集中。');
+    const limitingReasons = buildLimitingReasons(
+      abilityAlignment,
+      decision.classification,
+      interestAlignment,
+      workStyleAlignment,
+      environmentFriction,
+      energyRisk,
+      positiveEvidenceGate,
+    );
+    const representativeCareerId = [...specificEvidence]
+      .sort((a, b) => {
+        const aMatch = groupMatches.find(({ careerId }) => careerId === a.careerId)?.matchScore ?? 0;
+        const bMatch = groupMatches.find(({ careerId }) => careerId === b.careerId)?.matchScore ?? 0;
+        return Number(b.strongRecommendation) - Number(a.strongRecommendation) || Number(b.gatePassed) - Number(a.gatePassed) || b.corePositiveCount - a.corePositiveCount || b.positiveCount - a.positiveCount || bMatch - aMatch;
+      })[0]?.careerId ?? groupMatches[0].careerId;
 
     return {
       publicCareerId: group.id,
       title: group.title,
       description: group.description,
-      classification,
+      classification: decision.classification,
+      recommendationStrength: decision.recommendationStrength,
+      recommendationSource: decision.recommendationSource,
+      positiveEvidenceGate,
       specificCareerIds: [...group.specificCareerIds],
       commonTitles: [...group.commonTitles],
       dailyTasks: [...group.dailyTasks],
-      representativeCareerId: groupMatches[0].careerId,
+      representativeCareerId,
       relativeRank: index + 1,
       relativePercentile,
       fitSeparation,
@@ -285,4 +489,119 @@ export function interpretPublicCareers({
     lower: all.filter(({ classification }) => classification === 'lower'),
     all,
   };
+}
+
+interface InterpretSpecificCareerInput extends InterpretPublicCareersInput {
+  careerId: string;
+}
+
+export function interpretSpecificCareer({
+  careerId,
+  matches,
+  talentProfile,
+  responses = [],
+  questions = QUICK_DISCOVERY_QUESTIONS,
+  careers = CAREER_PROFILES,
+  groups = PUBLIC_CAREER_GROUPS,
+}: InterpretSpecificCareerInput): SpecificCareerInterpretation {
+  const career = careers.find(({ id }) => id === careerId);
+  const match = matches.find((item) => item.careerId === careerId);
+  const group = groups.find(({ specificCareerIds }) => (specificCareerIds as readonly string[]).includes(careerId));
+  if (!career || !match || !group) throw new Error(`Cannot interpret unknown career ${careerId}.`);
+  const sortedMatches = [...matches].sort((a, b) => b.matchScore - a.matchScore);
+  const index = sortedMatches.findIndex((item) => item.careerId === careerId);
+  const relativeRank = index + 1;
+  const relativePercentile = sortedMatches.length <= 1 ? 1 : 1 - index / (sortedMatches.length - 1);
+  const median = sortedMatches[Math.floor(sortedMatches.length / 2)]?.matchScore ?? 0;
+  const fitSeparation = match.matchScore - median;
+  const abilityAlignment = buildAbilityAlignmentsFromRequirements(
+    careerRequirements(career),
+    career.coreTasks,
+    talentProfile.baseTalents,
+    responses,
+    questions,
+  );
+  const environmentFriction = riskFromEnvironment([match]);
+  const energyRisk = riskFromEnergy([career], talentProfile.baseTalents);
+  const positiveEvidenceGate = evaluatePositiveEvidenceGate(
+    abilityAlignment,
+    match.confidence,
+    environmentFriction,
+    energyRisk,
+  );
+  const preferenceMismatch = match.interestMatch < 0.38 && match.workStyleMatch < 0.5;
+  const coreLowOverlap = abilityAlignment.some(({ alignment, importance }) => alignment === 'low_overlap' && importance === 'core');
+  const decision = decideRecommendation({
+    relativePercentile,
+    fitSeparation,
+    evidenceGate: positiveEvidenceGate,
+    interestAlignment: match.interestMatch,
+    workStyleAlignment: match.workStyleMatch,
+    environmentFriction,
+    energyRisk,
+    explicitMismatch: environmentFriction === 'high' || energyRisk === 'high' || coreLowOverlap || preferenceMismatch,
+  });
+  const matchingReasons = buildRecommendationReasons(
+    abilityAlignment,
+    match.interestMatch,
+    match.workStyleMatch,
+    environmentFriction,
+  );
+  if (!matchingReasons.length && relativePercentile >= 0.7) {
+    matchingReasons.push('這份工作在目前 60 種職業中相對靠前，但能力證據還沒有集中到足以形成強推薦。');
+  }
+  return {
+    careerId,
+    publicCareerId: group.id,
+    publicCareerTitle: group.title,
+    classification: decision.classification,
+    recommendationStrength: decision.recommendationStrength,
+    recommendationSource: decision.recommendationSource,
+    positiveEvidenceGate,
+    relativeRank,
+    confidence: match.confidence,
+    environmentFriction,
+    energyRisk,
+    abilityAlignment,
+    matchingReasons,
+    limitingReasons: buildLimitingReasons(
+      abilityAlignment,
+      decision.classification,
+      match.interestMatch,
+      match.workStyleMatch,
+      environmentFriction,
+      energyRisk,
+      positiveEvidenceGate,
+    ),
+    componentScores: {
+      talent: match.talentMatch,
+      interest: match.interestMatch,
+      workStyle: match.workStyleMatch,
+      environment: match.environmentMatch,
+      environmentPenalty: Math.max(0, 1 - match.environmentMatch),
+      values: match.valuesMatch,
+      transferableSkills: match.transferableSkillsMatch,
+    },
+  };
+}
+
+export function buildPrimaryCareerPresentation(
+  results: PublicCareerResults,
+  surpriseCareerIds: readonly string[] = [],
+  limits = { strong: 4, moderate: 4, lower: 3, surprise: 3 },
+) {
+  const strong = results.strong.slice(0, limits.strong);
+  const moderate = results.moderate.filter(({ matchingReasons, positiveEvidenceGate }) =>
+    matchingReasons.length > 0 || positiveEvidenceGate.positiveAlignmentCount > 0,
+  ).slice(0, limits.moderate);
+  const fallback = strong.length === 0 ? results.moderate.slice(0, limits.moderate) : [];
+  const lower = results.lower.slice(0, limits.lower);
+  const surpriseIds = new Set(surpriseCareerIds);
+  const surprise = surpriseIds.size
+    ? results.all.filter(({ specificCareerIds }) => specificCareerIds.some((careerId) => surpriseIds.has(careerId))).slice(0, limits.surprise)
+    : [];
+  const summary = strong.length
+    ? `目前有 ${strong.length} 類工作同時具有較完整的能力證據。`
+    : '目前沒有能力證據足夠集中的單一方向；相對排名靠前的結果會以探索方向呈現。';
+  return { strong, moderate, fallback, lower, surprise, summary };
 }

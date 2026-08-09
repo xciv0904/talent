@@ -22,7 +22,7 @@ describe('user-facing explanation QA', () => {
     const sample = sampleByLevel().strong.slice(0, 10);
     expect(sample).toHaveLength(10);
     for (const career of sample) {
-      const alignments = career.abilityAlignment.filter(({ alignment }) => alignment === 'strong');
+      const alignments = career.abilityAlignment.filter(({ alignment }) => alignment === 'strong_alignment' || alignment === 'moderate_alignment');
       expect(alignments.length).toBeGreaterThanOrEqual(2);
       expect(alignments.every(({ userEvidence, relevantCareerTasks, explanation }) => userEvidence.length > 0 && relevantCareerTasks.length > 0 && explanation.includes('回答'))).toBe(true);
       expect(career.matchingReasons.length).toBeGreaterThanOrEqual(2);
@@ -33,7 +33,7 @@ describe('user-facing explanation QA', () => {
     const sample = sampleByLevel().moderate.slice(0, 10);
     expect(sample).toHaveLength(10);
     for (const career of sample) {
-      const supportedAbilities = career.abilityAlignment.filter(({ alignment }) => alignment === 'strong' || alignment === 'moderate');
+      const supportedAbilities = career.abilityAlignment.filter(({ alignment }) => alignment === 'strong_alignment' || alignment === 'moderate_alignment');
       expect(career.matchingReasons.length + supportedAbilities.length).toBeGreaterThan(0);
       if (!supportedAbilities.length) expect(career.matchingReasons.length).toBeGreaterThan(0);
       expect(career.limitingReasons.length).toBeGreaterThan(0);
@@ -46,7 +46,7 @@ describe('user-facing explanation QA', () => {
     for (const career of sample) {
       expect(career.limitingReasons.length).toBeGreaterThan(0);
       expect(career.limitingReasons.join('')).not.toMatch(/你不具備|你不能|做不到/);
-      expect(career.abilityAlignment.filter(({ alignment }) => alignment === 'insufficient_evidence').every(({ explanation }) => explanation.includes('不能把未知當成能力不足'))).toBe(true);
+      expect(career.abilityAlignment.filter(({ alignment }) => alignment === 'insufficient_evidence').every(({ explanation }) => explanation.includes('還沒有足夠不同情境'))).toBe(true);
     }
   });
 });
