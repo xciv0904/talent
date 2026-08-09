@@ -11,7 +11,35 @@ describe('unified storage contract', () => {
     expect(state.talentProfile).toBeNull();
     expect(state.careerResults).toBeNull();
     expect(state.experiments).toEqual([]);
+    expect(state.selectedDirection).toBeNull();
+    expect(state.exploredCareers).toEqual([]);
+    expect(state.completedExperiences).toEqual([]);
+    expect(state.reflectionResults).toEqual([]);
+    expect(state.navigatorState).toEqual({ guidedAnswers: {} });
     expect(state.betaFeedback.sessionId).toBe(state.sessionId);
+  });
+
+  it('persists and sanitizes the post-assessment journey', () => {
+    const state = createInitialAppState();
+    state.selectedDirection = 'insight_research';
+    state.exploredCareers = ['ux_researcher'];
+    state.completedExperiences = ['ux_researcher'];
+    state.reflectionResults = [{ careerId: 'ux_researcher', feeling: 'interesting', preference: 'understand_people', guidance: 'continue', completedAt: '2026-08-09T00:00:00.000Z' }];
+    state.navigatorState = { need: 'guided_direction', guidedAnswers: { activity: 'insight_research' }, lastVisitedStep: 'experience', updatedAt: '2026-08-09T00:00:00.000Z' };
+    const parsed = parseStoredState(JSON.stringify(state));
+    expect(parsed.selectedDirection).toBe('insight_research');
+    expect(parsed.exploredCareers).toEqual(['ux_researcher']);
+    expect(parsed.completedExperiences).toEqual(['ux_researcher']);
+    expect(parsed.reflectionResults[0].guidance).toBe('continue');
+    expect(parsed.navigatorState.guidedAnswers.activity).toBe('insight_research');
+  });
+
+  it('migrates the previous v3 results and starts a blank Navigator journey', () => {
+    const state = createInitialAppState();
+    const migrated = parseStoredState(JSON.stringify({ ...state, schemaVersion: 3, selectedDirection: undefined, navigatorState: undefined }));
+    expect(migrated.schemaVersion).toBe(SCHEMA_VERSION);
+    expect(migrated.selectedDirection).toBeNull();
+    expect(migrated.navigatorState).toEqual({ guidedAnswers: {} });
   });
 
   it('restores compatible state and rejects stale or broken payloads', () => {

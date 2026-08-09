@@ -15,6 +15,12 @@ These are product-learning metrics, not scientific validation and not evidence t
 - Explicit clarity problem: `hard_to_understand`.
 - Self-model disagreement: `very_different_from_self`; this is not automatically a scoring defect.
 
+## Next-Step Clarity
+
+- Primary Navigator metric: report `very_clear`, `mostly_clear`, `still_uncertain`, and `completely_unclear` separately.
+- Positive clarity combines `very_clear` and `mostly_clear` only after displaying the separate counts.
+- Do not infer Next-Step Clarity from Talent agreement or Career Fit; it measures whether the result created an actionable next step.
+
 ## Talent Agreement
 
 - Agreement numerator: Composite Talent feedback marked `strongly_agree` or `mostly_agree`.

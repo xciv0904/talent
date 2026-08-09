@@ -18,6 +18,7 @@ Public Beta data is stored locally in `AppStorageState.betaFeedback`. The user m
 ## Feedback arrays
 
 - `overallFeedback`: one result-level response
+- `nextStepClarity`: `very_clear`, `mostly_clear`, `still_uncertain`, or `completely_unclear`
 - `talentFeedback[]`: `compositeTalentId`, agreement, discovery value, timestamp
 - `careerFeedback[]`: `careerId`, response, timestamp
 - `surpriseFeedback[]`: `careerId`, response, timestamp
@@ -34,4 +35,4 @@ Neither export contains name, email, user agent, device fingerprint, precise loc
 
 ## Dashboard-ready aggregations
 
-Version-segmented exports can calculate completion rate, question unclear rate, Talent agreement, Hidden Talent discovery, Career recommendation responses, unexpected-but-interesting responses, clearly-wrong responses, Surprise usefulness, and result clarity. Feedback is never an input to Career Match.
+Version-segmented exports can calculate completion rate, question unclear rate, Talent agreement, Hidden Talent discovery, Career recommendation responses, unexpected-but-interesting responses, clearly-wrong responses, Surprise usefulness, result clarity, and Next-Step Clarity. Feedback is never an input to Career Match.

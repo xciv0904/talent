@@ -4,8 +4,8 @@ export const PRODUCT_VERSIONS = {
   careerDatasetVersion: '1.0.0',
   matchingEngineVersion: '1.0.0',
   explanationVersion: '1.1.0',
-  betaFeedbackSchemaVersion: 1,
-  storageSchemaVersion: 3,
+  betaFeedbackSchemaVersion: 2,
+  storageSchemaVersion: 4,
 } as const;
 
 export interface ResultVersionInfo {

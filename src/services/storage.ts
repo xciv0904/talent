@@ -1,6 +1,7 @@
 import { CURRENT_RESULT_VERSIONS, PRODUCT_VERSIONS, type ResultVersionInfo } from '../config/versions';
 import {
   CAREER_FEEDBACK_OPTIONS,
+  NEXT_STEP_CLARITY_OPTIONS,
   OVERALL_FEEDBACK_OPTIONS,
   QUESTION_FEEDBACK_REASONS,
   SURPRISE_FEEDBACK_OPTIONS,
@@ -9,7 +10,10 @@ import {
   type AssessmentProfileVectors,
   type BetaFeedback,
   type CareerMatchResult,
+  type CareerDirectionId,
   type CategorizedCareerResults,
+  type ExperienceReflectionResult,
+  type NavigatorNeed,
   type QuestionResponse,
   type UserTalentProfile,
 } from '../types';
@@ -34,7 +38,15 @@ export interface ExperimentRecord {
   careerId: string;
   status: 'saved' | 'in_progress' | 'completed';
   reflection?: string;
+  currentStep?: number;
   updatedAt: string;
+}
+
+export interface NavigatorState {
+  need?: NavigatorNeed;
+  guidedAnswers: Record<string, CareerDirectionId>;
+  lastVisitedStep?: 'directions' | 'choice' | 'next_step' | 'experience';
+  updatedAt?: string;
 }
 
 export interface AppStorageState {
@@ -45,6 +57,11 @@ export interface AppStorageState {
   talentProfile: UserTalentProfile | null;
   careerResults: StoredCareerResults | null;
   experiments: ExperimentRecord[];
+  selectedDirection: CareerDirectionId | null;
+  exploredCareers: string[];
+  completedExperiences: string[];
+  reflectionResults: ExperienceReflectionResult[];
+  navigatorState: NavigatorState;
   betaFeedback: BetaFeedback;
 }
 
@@ -82,6 +99,11 @@ export const createInitialAppState = (): AppStorageState => {
     talentProfile: null,
     careerResults: null,
     experiments: [],
+    selectedDirection: null,
+    exploredCareers: [],
+    completedExperiences: [],
+    reflectionResults: [],
+    navigatorState: { guidedAnswers: {} },
     betaFeedback: createBetaFeedback(sessionId),
   };
 };
@@ -108,7 +130,7 @@ function sanitizeBetaFeedback(value: unknown, sessionId: string): BetaFeedback {
   const fallback = createBetaFeedback(sessionId);
   if (!value || typeof value !== 'object') return fallback;
   const feedback = value as Partial<BetaFeedback>;
-  if (feedback.schemaVersion !== PRODUCT_VERSIONS.betaFeedbackSchemaVersion) return fallback;
+  if (feedback.schemaVersion !== PRODUCT_VERSIONS.betaFeedbackSchemaVersion && feedback.schemaVersion !== 1) return fallback;
   const timestamp = isTimestamp(feedback.timestamp) ? feedback.timestamp : fallback.timestamp;
   return {
     sessionId,
@@ -123,6 +145,7 @@ function sanitizeBetaFeedback(value: unknown, sessionId: string): BetaFeedback {
     assessmentStartedAt: isTimestamp(feedback.assessmentStartedAt) ? feedback.assessmentStartedAt : undefined,
     assessmentCompletedAt: isTimestamp(feedback.assessmentCompletedAt) ? feedback.assessmentCompletedAt : undefined,
     overallFeedback: isChoice(feedback.overallFeedback, OVERALL_FEEDBACK_OPTIONS) ? feedback.overallFeedback : undefined,
+    nextStepClarity: isChoice(feedback.nextStepClarity, NEXT_STEP_CLARITY_OPTIONS) ? feedback.nextStepClarity : undefined,
     talentFeedback: Array.isArray(feedback.talentFeedback) ? feedback.talentFeedback.filter((item) => Boolean(
       item && isString(item.compositeTalentId) && isTimestamp(item.timestamp) &&
       (item.agreement === undefined || isChoice(item.agreement, TALENT_AGREEMENT_OPTIONS)) &&
@@ -157,7 +180,8 @@ export function parseStoredState(raw: string | null): AppStorageState {
   try {
     const parsed = JSON.parse(raw) as Partial<AppStorageState>;
     const isLegacyV2 = parsed.schemaVersion === 2;
-    if (parsed.schemaVersion !== SCHEMA_VERSION && !isLegacyV2) return createInitialAppState();
+    const isPreviousV3 = parsed.schemaVersion === 3;
+    if (parsed.schemaVersion !== SCHEMA_VERSION && !isLegacyV2 && !isPreviousV3) return createInitialAppState();
     const sessionId = isString(parsed.sessionId) && parsed.sessionId.startsWith('beta_') ? parsed.sessionId : createAnonymousSessionId();
     const progress = parsed.assessmentProgress;
     const assessmentProgress: AssessmentProgress = {
@@ -178,7 +202,8 @@ export function parseStoredState(raw: string | null): AppStorageState {
     const experiments = Array.isArray(parsed.experiments)
       ? parsed.experiments.filter((record): record is ExperimentRecord => Boolean(
           record && isString(record.careerId) && ['saved', 'in_progress', 'completed'].includes(record.status) &&
-          isString(record.updatedAt) && (record.reflection === undefined || isString(record.reflection)),
+          isString(record.updatedAt) && (record.reflection === undefined || isString(record.reflection)) &&
+          (record.currentStep === undefined || (typeof record.currentStep === 'number' && Number.isFinite(record.currentStep) && record.currentStep >= 0 && record.currentStep <= 4)),
         ))
       : [];
     const talentProfile = !isLegacyV2 && parsed.talentProfile && Array.isArray(parsed.talentProfile.baseTalents) &&
@@ -194,6 +219,20 @@ export function parseStoredState(raw: string | null): AppStorageState {
       talentProfile,
       careerResults,
       experiments,
+      selectedDirection: isString(parsed.selectedDirection) ? parsed.selectedDirection as CareerDirectionId : null,
+      exploredCareers: Array.isArray(parsed.exploredCareers) ? parsed.exploredCareers.filter(isString) : [],
+      completedExperiences: Array.isArray(parsed.completedExperiences) ? parsed.completedExperiences.filter(isString) : [],
+      reflectionResults: Array.isArray(parsed.reflectionResults) ? parsed.reflectionResults.filter((item): item is ExperienceReflectionResult => Boolean(
+        item && isString(item.careerId) && ['engaged', 'interesting', 'neutral', 'draining', 'disliked'].includes(item.feeling) &&
+        ['find_problems', 'understand_people', 'organize_observations', 'improve_ideas', 'none'].includes(item.preference) &&
+        ['continue', 'try_another', 'deprioritize'].includes(item.guidance) && isTimestamp(item.completedAt),
+      )) : [],
+      navigatorState: parsed.navigatorState && typeof parsed.navigatorState === 'object' ? {
+        need: isString(parsed.navigatorState.need) ? parsed.navigatorState.need as NavigatorNeed : undefined,
+        guidedAnswers: parsed.navigatorState.guidedAnswers && typeof parsed.navigatorState.guidedAnswers === 'object' ? parsed.navigatorState.guidedAnswers : {},
+        lastVisitedStep: isString(parsed.navigatorState.lastVisitedStep) ? parsed.navigatorState.lastVisitedStep as NavigatorState['lastVisitedStep'] : undefined,
+        updatedAt: isString(parsed.navigatorState.updatedAt) ? parsed.navigatorState.updatedAt : undefined,
+      } : { guidedAnswers: {} },
       betaFeedback: isLegacyV2 ? createBetaFeedback(sessionId) : sanitizeBetaFeedback(parsed.betaFeedback, sessionId),
     };
   } catch {
@@ -244,6 +283,12 @@ export function resetAssessment(): void {
       answers: [],
       talentProfile: null,
       careerResults: null,
+      experiments: [],
+      selectedDirection: null,
+      exploredCareers: [],
+      completedExperiences: [],
+      reflectionResults: [],
+      navigatorState: { guidedAnswers: {} },
       betaFeedback: fresh.betaFeedback,
     };
   });
@@ -253,5 +298,43 @@ export function saveExperiment(record: ExperimentRecord): void {
   updateAppState((state) => ({
     ...state,
     experiments: [...state.experiments.filter((item) => item.careerId !== record.careerId), record],
+  }));
+}
+
+export function selectCareerDirection(directionId: CareerDirectionId | null): void {
+  updateAppState((state) => ({
+    ...state,
+    selectedDirection: directionId,
+    navigatorState: { ...state.navigatorState, lastVisitedStep: directionId ? 'next_step' : 'choice', updatedAt: now() },
+  }));
+}
+
+export function saveGuidedAnswer(promptId: string, directionId: CareerDirectionId): void {
+  updateAppState((state) => ({
+    ...state,
+    navigatorState: {
+      ...state.navigatorState,
+      lastVisitedStep: 'choice',
+      updatedAt: now(),
+      guidedAnswers: { ...state.navigatorState.guidedAnswers, [promptId]: directionId },
+    },
+  }));
+}
+
+export function saveNavigatorNeed(need: NavigatorNeed): void {
+  updateAppState((state) => ({ ...state, navigatorState: { ...state.navigatorState, need, updatedAt: now() } }));
+}
+
+export function markCareerExplored(careerId: string): void {
+  updateAppState((state) => state.exploredCareers.includes(careerId) ? state : ({ ...state, exploredCareers: [...state.exploredCareers, careerId] }));
+}
+
+export function saveExperienceReflection(result: ExperienceReflectionResult): void {
+  updateAppState((state) => ({
+    ...state,
+    completedExperiences: [...new Set([...state.completedExperiences, result.careerId])],
+    reflectionResults: [...state.reflectionResults.filter(({ careerId }) => careerId !== result.careerId), result],
+    experiments: state.experiments.map((record) => record.careerId === result.careerId ? { ...record, status: 'completed', currentStep: 4, updatedAt: result.completedAt } : record),
+    navigatorState: { ...state.navigatorState, lastVisitedStep: 'experience', updatedAt: result.completedAt },
   }));
 }

@@ -58,6 +58,14 @@ describe('Public Beta feedback and diagnostics', () => {
     expect('email' in value.feedback).toBe(false);
   });
 
+  it('keeps Next-Step Clarity as a separate Beta metric', () => {
+    const state = createInitialAppState();
+    state.betaFeedback.nextStepClarity = 'still_uncertain';
+    const parsed = parseStoredState(JSON.stringify(state));
+    expect(parsed.betaFeedback.nextStepClarity).toBe('still_uncertain');
+    expect(parsed.betaFeedback.overallFeedback).toBeUndefined();
+  });
+
   it('builds a complete diagnostic export without device information', () => {
     const report = buildDiagnosticReport(completedState());
     expect(report.versions).toEqual(CURRENT_RESULT_VERSIONS);

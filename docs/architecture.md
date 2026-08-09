@@ -4,7 +4,7 @@
 
 Career Discovery turns observed behavior into increasingly actionable layers:
 
-`Real behavior → Behavior Signals → Base Talents → Hidden/Composite Talents → Work Profile → Career Match → Career Experiment`
+`Real behavior → Behavior Signals → Base Talents → Hidden/Composite Talents → Work Profile → Career Match → Career Directions → 20-minute Career Experience`
 
 It is not a personality typing test and does not let an AI freely invent career recommendations. Deterministic data and scoring rules remain in the application; any future AI service must explain or summarize structured results rather than replace them.
 
@@ -73,6 +73,7 @@ Career matching is split into three boundaries:
 - `career-match-engine` calculates the six fit dimensions and explanation evidence.
 - `entry-distance-engine` calculates transition difficulty without lowering Career Fit.
 - `career-result-engine` selects Best Fit, Easier Transition, High Potential, and Surprise Me with separate filters and disjoint results.
+- `career-direction-engine` groups existing matches into plain-language activity directions and orders exploration priority without changing Career Fit.
 
 Market popularity, salary, and job-opening counts are absent from both the Career Profile and formula.
 
@@ -84,9 +85,9 @@ Question evidence receives a deterministic ID plus `questionId`, `optionId`, and
 
 ## State and persistence
 
-No state library is selected yet. Local component state and typed engine functions are sufficient until the questionnaire flow is designed. Before adding a store, define its state transitions and persistence needs; prefer a small reducer or lightweight store over server-state machinery.
+All browser persistence is behind the versioned `src/services/storage.ts` boundary. It stores assessment progress and results plus the post-assessment journey: selected direction, explored careers, completed experiences, reflection results, and Navigator state. Components never call `localStorage` directly.
 
-Future persistence belongs behind `src/services/`. Domain types must not depend on browser storage, network clients, or vendor SDKs.
+Domain types and deterministic engines do not depend on browser storage, network clients, or vendor SDKs.
 
 ## Routing and deployment
 

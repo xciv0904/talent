@@ -6,6 +6,7 @@ import {
   ENVIRONMENT_DIMENSIONS,
   type CareerFeedbackChoice,
   type OverallFeedbackChoice,
+  type NextStepClarityChoice,
   type QuestionFeedbackReason,
   type SurpriseFeedbackChoice,
   type TalentAgreementChoice,
@@ -37,6 +38,10 @@ export function markAssessmentCompleted(): void {
 
 export function saveOverallFeedback(response: OverallFeedbackChoice): void {
   updateAppState((state) => ({ ...state, betaFeedback: { ...state.betaFeedback, overallFeedback: response, timestamp: timestamp() } }));
+}
+
+export function saveNextStepClarity(response: NextStepClarityChoice): void {
+  updateAppState((state) => ({ ...state, betaFeedback: { ...state.betaFeedback, nextStepClarity: response, timestamp: timestamp() } }));
 }
 
 export function saveTalentFeedback(compositeTalentId: string, update: { agreement?: TalentAgreementChoice; discovery?: TalentDiscoveryChoice }): void {

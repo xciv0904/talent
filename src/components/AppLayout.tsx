@@ -3,7 +3,7 @@ import { NavLink, Outlet } from 'react-router-dom';
 
 const navItems = [
   ['/discover', '探索'], ['/assessment', '測驗'], ['/results', '結果'], ['/talents', '天賦'],
-  ['/careers', '職涯'], ['/compare', '比較'], ['/experiments', '實驗'], ['/methodology', '方法'],
+  ['/careers', '職涯'], ['/compare', '比較'], ['/experiments', '體驗'], ['/methodology', '方法'],
 ] as const;
 
 export function AppLayout() {

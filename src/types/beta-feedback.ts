@@ -22,6 +22,9 @@ export type SurpriseFeedbackChoice = (typeof SURPRISE_FEEDBACK_OPTIONS)[number];
 export const QUESTION_FEEDBACK_REASONS = ['none_fit', 'multiple_fit', 'unclear_context', 'unclear_difference', 'no_experience'] as const;
 export type QuestionFeedbackReason = (typeof QUESTION_FEEDBACK_REASONS)[number];
 
+export const NEXT_STEP_CLARITY_OPTIONS = ['very_clear', 'mostly_clear', 'still_uncertain', 'completely_unclear'] as const;
+export type NextStepClarityChoice = (typeof NEXT_STEP_CLARITY_OPTIONS)[number];
+
 export interface TalentBetaFeedback {
   compositeTalentId: string;
   agreement?: TalentAgreementChoice;
@@ -60,6 +63,7 @@ export interface BetaFeedback {
   assessmentStartedAt?: string;
   assessmentCompletedAt?: string;
   overallFeedback?: OverallFeedbackChoice;
+  nextStepClarity?: NextStepClarityChoice;
   talentFeedback: TalentBetaFeedback[];
   careerFeedback: CareerBetaFeedback[];
   surpriseFeedback: SurpriseBetaFeedback[];
