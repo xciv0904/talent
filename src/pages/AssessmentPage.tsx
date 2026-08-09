@@ -10,8 +10,9 @@ const typeNames: Record<Question['type'], string> = {
   situational_choice: '情境判斷', forced_choice: '取捨選擇', ranking: '排序', behavior: '行為頻率', energy: '能量感受', evidence: '實際證據', interest: '興趣', environment: '工作環境', values: '價值選擇',
 };
 const questionFeedbackOptions: Array<[QuestionFeedbackReason, string]> = [
-  ['none_fit', '選項都不像我'], ['multiple_fit', '好幾個都很像'], ['unclear_context', '情境不清楚'],
-  ['unclear_difference', '看不懂差別'], ['no_experience', '沒遇過這種情況'],
+  ['scenario_unclear', '情境不清楚'], ['multiple_valid_answers', '好幾個答案都合理'],
+  ['no_matching_answer', '沒有符合我的答案'], ['requires_experience', '需要我沒有的經驗'],
+  ['term_unclear', '有詞看不懂'], ['depends_too_much_on_context', '太依賴特定情境'],
 ];
 
 export function AssessmentPage() {
@@ -61,8 +62,9 @@ export function AssessmentPage() {
     <div className="flex items-center justify-between gap-4 text-sm"><span className="font-semibold">{typeNames[question.type]}</span><span className="text-slate-500">{index + 1} / {QUICK_DISCOVERY_QUESTIONS.length}</span></div>
     <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-ink/10" aria-label={`進度 ${progress}%`}><div className="h-full rounded-full bg-coral transition-all" style={{ width: `${progress}%` }} /></div>
     <section className="mt-6 rounded-[1.5rem] border border-ink/10 bg-white/65 p-4 shadow-[0_30px_80px_-65px_rgba(24,35,31,.65)] sm:mt-8 sm:rounded-[2rem] sm:p-10">
-      <p className="text-xs font-semibold tracking-widest text-slate-400 uppercase">{question.id}</p>
-      <h1 className="mt-3 font-serif text-[clamp(1.65rem,4vw,2.5rem)] font-normal leading-[1.15] tracking-[-.025em] text-balance">{question.prompt}</h1>
+      <div className="flex items-center justify-between gap-3 text-xs font-semibold tracking-widest text-slate-400 uppercase"><span>{question.id}</span><span>情境</span></div>
+      <h1 className="mt-3 font-serif text-[clamp(1.55rem,4vw,2.35rem)] font-normal leading-[1.2] tracking-[-.025em] text-balance">{question.scenario}</h1>
+      <p className="mt-5 border-l-2 border-blue-300 pl-4 text-lg font-semibold leading-7 text-slate-900 sm:text-xl">{question.prompt}</p>
       {question.description && <p className="mt-3 text-slate-600">{question.description}</p>}
       <div className={`mt-8 grid gap-3 ${question.type === 'forced_choice' ? 'sm:grid-cols-2' : question.type === 'energy' ? 'sm:grid-cols-2' : ''}`}>
         {question.options.map((option, optionIndex) => {

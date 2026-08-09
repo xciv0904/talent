@@ -9,12 +9,14 @@ const INITIAL_CONTEXT_AUDIT = {
 } as const;
 
 const questionText = QUICK_DISCOVERY_QUESTIONS.map((question) => [
+  question.scenario,
+  question.decisionPoint,
   question.prompt,
   question.description ?? '',
   ...question.options.map(({ label, description }) => `${label} ${description ?? ''}`),
 ].join(' ')).join('\n');
 
-const specializedWorkContext = /project|stakeholder|meeting|presentation|deadline|client|manager|coworker|team|office|report|strategy|department|proposal|workplace|專案|跨部門|主管|同事(?!件)|客戶|會議|提案|報告|交付|策略|團隊|規格|時程|關係人|升遷|部門|工作經驗/i;
+const specializedWorkContext = /project|stakeholder|meeting|presentation|deadline|client|manager|coworker|team|office|report|strategy|department|proposal|workplace|專案|跨部門|主管|同事(?!件|情)|客戶|會議|提案|報告|交付|策略|團隊|規格|時程|關係人|升遷|部門|工作經驗/i;
 
 const contextPersonas = [
   { id: 'student_18', description: '18 years old; no formal work, project-management, or management experience' },
@@ -68,7 +70,7 @@ describe('Quick Discovery context neutrality', () => {
   });
 
   it('contains no specialized workplace context in stems, helpers, or option labels', () => {
-    expect(questionText).not.toMatch(specializedWorkContext);
+    expect(questionText.match(specializedWorkContext)?.[0]).toBeUndefined();
   });
 
   it('avoids vague wording that asks users to translate an abstract scenario', () => {
@@ -78,8 +80,8 @@ describe('Quick Discovery context neutrality', () => {
   it.each(contextPersonas)('$id can read all 45 questions without assumed experience', ({ description }) => {
     expect(description.length).toBeGreaterThan(20);
     expect(QUICK_DISCOVERY_QUESTIONS).toHaveLength(45);
-    expect(QUICK_DISCOVERY_QUESTIONS.every(({ prompt, options }) => prompt.length > 0 && options.every(({ label }) => label.length > 0))).toBe(true);
-    expect(questionText).not.toMatch(specializedWorkContext);
+    expect(QUICK_DISCOVERY_QUESTIONS.every(({ scenario, prompt, options }) => scenario.length > 0 && prompt.length > 0 && options.every(({ label }) => label.length > 0))).toBe(true);
+    expect(questionText.match(specializedWorkContext)?.[0]).toBeUndefined();
   });
 
   it('preserves the complete pre-rewrite signal contract', () => {

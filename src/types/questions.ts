@@ -16,6 +16,25 @@ export type QuestionType = (typeof QUESTION_TYPES)[number];
 export type SignalMap = Record<string, number>;
 export type TalentSignalMap = Partial<Record<TalentId, number>>;
 
+export const SCENARIO_DOMAINS = [
+  'individual_problem',
+  'learning',
+  'information',
+  'social_interaction',
+  'group_activity',
+  'helping_someone',
+  'planning',
+  'unexpected_change',
+  'limited_time',
+  'unfamiliar_task',
+  'quality_check',
+  'creative_task',
+  'practical_task',
+  'choice_decision',
+] as const;
+export type ScenarioDomain = (typeof SCENARIO_DOMAINS)[number];
+export type ContextRequirement = 'universal' | 'common_activity';
+
 export interface QuestionOption {
   id: string;
   label: string;
@@ -32,6 +51,10 @@ export interface QuestionOption {
 interface QuestionBase {
   id: string;
   type: QuestionType;
+  scenarioDomain: ScenarioDomain;
+  contextRequirements: ContextRequirement;
+  scenario: string;
+  decisionPoint: string;
   prompt: string;
   description?: string;
   required: boolean;

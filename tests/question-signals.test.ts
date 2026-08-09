@@ -8,7 +8,11 @@ describe('aggregateQuestionSignals', () => {
       {
         id: 'q1',
         type: 'situational_choice',
-        prompt: '遇到不熟悉的問題時，你通常先做什麼？',
+        scenarioDomain: 'unfamiliar_task',
+        contextRequirements: 'universal',
+        scenario: '你拿到一件從未使用過的工具，簡短說明只有零散資訊。你需要先理解它才能開始。',
+        decisionPoint: '面對陌生工具時選擇第一個行動',
+        prompt: '遇到不熟悉的問題時，你會先做什麼？',
         required: true,
         selection: 'single',
         options: [

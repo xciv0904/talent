@@ -27,6 +27,17 @@ Public Beta data is stored locally in `AppStorageState.betaFeedback`. The user m
 
 Each entity array is upserted by its stable ID, so one session cannot inflate counts by repeatedly pressing the same control. Invalid enum values, timestamps, or malformed records are removed during storage parsing.
 
+Question feedback reasons are:
+
+- `scenario_unclear`
+- `multiple_valid_answers`
+- `no_matching_answer`
+- `requires_experience`
+- `term_unclear`
+- `depends_too_much_on_context`
+
+High rates of `requires_experience` or `depends_too_much_on_context` trigger a scenario review before any signal or scoring change is considered.
+
 ## Export structures
 
 The Beta Feedback export adds `answeredQuestionCount`, `currentQuestionIndex`, and `completed`, enabling completion and drop-off aggregation. Diagnostic export separately contains answers, signals, normalized profiles, score components, Environment penalties, Entry Distance, evidence IDs, and result categories.

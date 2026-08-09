@@ -32,6 +32,16 @@ All normalized score and confidence fields use a `0..1` range unless a specific 
 | Ranking | `ranking` | Ordered option IDs and required rank count |
 | Scale | `behavior`, `evidence` | Bounded numeric scale |
 
+Every Quick Discovery question also carries an independent scenario contract:
+
+- `scenarioDomain`: one of the 14 audited context domains
+- `contextRequirements`: `universal` or `common_activity`; every current Quick item is `universal`
+- `scenario`: a concrete one-to-three-sentence mini-scenario with Who, What, and Constraint
+- `decisionPoint`: the single behavioral or preference decision being measured
+- `prompt`: the direct question shown after the scenario
+
+The UI renders `scenario` and `prompt` as two parts of the same question. Scoring reads only option payloads, so scenario wording cannot change a weight implicitly.
+
 Every `QuestionOption` can emit any combination of:
 
 - `talentSignals`: weights keyed by the closed `TalentId` taxonomy

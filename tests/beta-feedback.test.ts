@@ -3,6 +3,7 @@ import { CURRENT_RESULT_VERSIONS, PRODUCT_VERSIONS } from '../src/config/version
 import { runCareerDiscoveryPipeline } from '../src/engine';
 import { buildBetaFeedbackExport, buildDiagnosticReport } from '../src/services/beta-feedback';
 import { createInitialAppState, parseStoredState } from '../src/services/storage';
+import { QUESTION_FEEDBACK_REASONS } from '../src/types';
 import { SYNTHETIC_PROFILES } from './fixtures/synthetic-profiles';
 
 const completedState = () => {
@@ -16,6 +17,17 @@ const completedState = () => {
 };
 
 describe('Public Beta feedback and diagnostics', () => {
+  it('exposes every cognitive interview reason required for scenario QA', () => {
+    expect(QUESTION_FEEDBACK_REASONS).toEqual([
+      'scenario_unclear',
+      'multiple_valid_answers',
+      'no_matching_answer',
+      'requires_experience',
+      'term_unclear',
+      'depends_too_much_on_context',
+    ]);
+  });
+
   it('stores required feedback schema and version fields', () => {
     const state = createInitialAppState();
     expect(state.betaFeedback).toMatchObject({
@@ -33,7 +45,7 @@ describe('Public Beta feedback and diagnostics', () => {
   it('keeps valid question and career feedback while removing invalid entries', () => {
     const state = createInitialAppState();
     state.betaFeedback.questionFeedback = [
-      { questionId: 'SJT01', reason: 'none_fit', timestamp: '2026-08-09T00:00:00.000Z' },
+      { questionId: 'SJT01', reason: 'no_matching_answer', timestamp: '2026-08-09T00:00:00.000Z' },
       { questionId: 'SJT02', reason: 'invalid' as never, timestamp: 'bad' },
     ];
     state.betaFeedback.careerFeedback = [
@@ -42,7 +54,7 @@ describe('Public Beta feedback and diagnostics', () => {
     ];
     const parsed = parseStoredState(JSON.stringify(state));
     expect(parsed.betaFeedback.questionFeedback).toHaveLength(1);
-    expect(parsed.betaFeedback.questionFeedback[0]).toMatchObject({ questionId: 'SJT01', reason: 'none_fit' });
+    expect(parsed.betaFeedback.questionFeedback[0]).toMatchObject({ questionId: 'SJT01', reason: 'no_matching_answer' });
     expect(parsed.betaFeedback.careerFeedback).toHaveLength(1);
     expect(parsed.betaFeedback.careerFeedback[0]).toMatchObject({ careerId: 'data_analyst', response: 'reason_clear_not_desired' });
   });

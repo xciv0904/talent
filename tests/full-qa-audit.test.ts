@@ -26,7 +26,7 @@ const expectUnit = (value: number, label: string) => {
 describe('complete data QA', () => {
   it('has no duplicate questions, options, careers, aliases, talents, or composites', () => {
     expectUnique(QUICK_DISCOVERY_QUESTIONS.map(({ id }) => id));
-    expectUnique(QUICK_DISCOVERY_QUESTIONS.map(({ prompt }) => prompt));
+    expectUnique(QUICK_DISCOVERY_QUESTIONS.map(({ scenario, prompt }) => `${scenario} ${prompt}`));
     for (const question of QUICK_DISCOVERY_QUESTIONS) {
       expectUnique(question.options.map(({ id }) => id));
       expectUnique(question.options.map(({ label }) => label));

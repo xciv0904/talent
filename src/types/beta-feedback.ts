@@ -19,7 +19,14 @@ export type CareerFeedbackChoice = (typeof CAREER_FEEDBACK_OPTIONS)[number];
 export const SURPRISE_FEEDBACK_OPTIONS = ['unexpected_attractive', 'unexpected_reasonable', 'known_not_considered', 'not_interested', 'reason_invalid'] as const;
 export type SurpriseFeedbackChoice = (typeof SURPRISE_FEEDBACK_OPTIONS)[number];
 
-export const QUESTION_FEEDBACK_REASONS = ['none_fit', 'multiple_fit', 'unclear_context', 'unclear_difference', 'no_experience'] as const;
+export const QUESTION_FEEDBACK_REASONS = [
+  'scenario_unclear',
+  'multiple_valid_answers',
+  'no_matching_answer',
+  'requires_experience',
+  'term_unclear',
+  'depends_too_much_on_context',
+] as const;
 export type QuestionFeedbackReason = (typeof QUESTION_FEEDBACK_REASONS)[number];
 
 export const NEXT_STEP_CLARITY_OPTIONS = ['very_clear', 'mostly_clear', 'still_uncertain', 'completely_unclear'] as const;
