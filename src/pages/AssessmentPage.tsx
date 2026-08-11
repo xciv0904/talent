@@ -15,6 +15,14 @@ const questionFeedbackOptions: Array<[QuestionFeedbackReason, string]> = [
   ['term_unclear', '有詞看不懂'], ['depends_too_much_on_context', '太依賴特定情境'],
 ];
 
+const responseIsComplete = (question: Question, response?: QuestionResponse) => {
+  if (!response) return false;
+  if (question.type === 'ranking' && response.selectedOptionIds.length !== question.rankCount) return false;
+  if (question.type === 'energy' && question.selection === 'multiple' && response.selectedOptionIds.length !== 2) return false;
+  if (question.type !== 'ranking' && question.selection === 'single' && response.selectedOptionIds.length !== 1) return false;
+  return !('scale' in question) || response.scaleValue !== undefined;
+};
+
 export function AssessmentPage() {
   const state = useAppState();
   const navigate = useNavigate();
@@ -23,7 +31,7 @@ export function AssessmentPage() {
   const question = QUICK_DISCOVERY_QUESTIONS[index];
   const answer = state.answers.find((item) => item.questionId === question.id);
   const progress = Math.round(((index + (answer ? 1 : 0)) / QUICK_DISCOVERY_QUESTIONS.length) * 100);
-  const complete = Boolean(answer && answer.selectedOptionIds.length > 0 && (!('scale' in question) || answer.scaleValue !== undefined));
+  const complete = responseIsComplete(question, answer);
 
   const saveResponse = (next: QuestionResponse) => updateAppState((current) => ({
     ...current,
@@ -51,8 +59,15 @@ export function AssessmentPage() {
   const go = (nextIndex: number) => updateAppState((current) => ({ ...current, assessmentProgress: { ...current.assessmentProgress, currentIndex: nextIndex, updatedAt: new Date().toISOString() } }));
   const finish = () => {
     const latest = updateAppState((current) => current);
-    const output = runCareerDiscoveryPipeline(latest.answers, { education: 'none' });
-    updateAppState((current) => ({ ...current, assessmentProgress: { currentIndex: index, completed: true, updatedAt: new Date().toISOString() }, talentProfile: output.talentProfile, careerResults: { matches: output.matches, categories: output.categories, profiles: output.profiles, versions: CURRENT_RESULT_VERSIONS } }));
+    const currentIds = new Set(QUICK_DISCOVERY_QUESTIONS.map(({ id }) => id));
+    const currentAnswers = latest.answers.filter(({ questionId }) => currentIds.has(questionId));
+    const incompleteIndex = QUICK_DISCOVERY_QUESTIONS.findIndex((item) => !responseIsComplete(item, currentAnswers.find(({ questionId }) => questionId === item.id)));
+    if (incompleteIndex >= 0) {
+      go(incompleteIndex);
+      return;
+    }
+    const output = runCareerDiscoveryPipeline(currentAnswers, { education: 'none' });
+    updateAppState((current) => ({ ...current, answers: currentAnswers, assessmentProgress: { currentIndex: index, completed: true, updatedAt: new Date().toISOString() }, talentProfile: output.talentProfile, careerResults: { matches: output.matches, categories: output.categories, profiles: output.profiles, versions: CURRENT_RESULT_VERSIONS } }));
     markAssessmentCompleted();
     navigate('/results');
   };
@@ -70,8 +85,11 @@ export function AssessmentPage() {
         {question.options.map((option, optionIndex) => {
           const selected = answer?.selectedOptionIds.includes(option.id) ?? false;
           const rank = answer?.ranking?.indexOf(option.id);
+          const energyOrder = question.type === 'energy' && question.selection === 'multiple'
+            ? answer?.selectedOptionIds.indexOf(option.id)
+            : -1;
           return <button key={option.id} type="button" onClick={() => select(option.id)} className={`assessment-option min-h-20 rounded-2xl border p-4 text-left ${cardTone} ${selected ? 'border-ink ring-2 ring-ink ring-offset-2' : 'hover:shadow-md'}`}>
-            <span className="flex items-start gap-3"><span className={`grid size-8 shrink-0 place-items-center rounded-full text-sm ${selected ? 'bg-ink text-white' : 'bg-white/80 text-ink/50'}`}>{question.type === 'ranking' && rank !== undefined && rank >= 0 ? rank + 1 : String.fromCharCode(65 + optionIndex)}</span><span><strong className="font-medium leading-6">{option.label}</strong>{option.description && <span className="mt-1 block text-sm leading-5 text-ink/50">{option.description}</span>}</span></span>
+            <span className="flex items-start gap-3"><span className={`grid size-8 shrink-0 place-items-center rounded-full text-sm ${selected ? 'bg-ink text-white' : 'bg-white/80 text-ink/50'}`}>{energyOrder === 0 ? '＋' : energyOrder === 1 ? '－' : question.type === 'ranking' && rank !== undefined && rank >= 0 ? rank + 1 : String.fromCharCode(65 + optionIndex)}</span><span><strong className="font-medium leading-6">{option.label}</strong>{energyOrder === 0 && <span className="mt-1 block text-xs font-semibold text-blue-700">較有精神</span>}{energyOrder === 1 && <span className="mt-1 block text-xs font-semibold text-slate-600">較消耗</span>}{option.description && <span className="mt-1 block text-sm leading-5 text-ink/50">{option.description}</span>}</span></span>
           </button>;
         })}
       </div>

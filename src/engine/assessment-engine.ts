@@ -137,6 +137,9 @@ export function runAssessment(
     if (question.type !== 'ranking' && question.selection === 'single' && selectedIds.length !== 1) {
       throw new Error(`Question ${question.id} requires exactly one selection.`);
     }
+    if (question.type === 'energy' && question.selection === 'multiple' && selectedIds.length !== 2) {
+      throw new Error(`Question ${question.id} requires one energizing and one draining selection.`);
+    }
 
     const scaleMultiplier = responseMultiplier(question, response);
     selectedIds.forEach((optionId, index) => {
@@ -166,7 +169,9 @@ export function runAssessment(
         option.label,
         'energy',
         option.energySignals,
-        multiplier,
+        question.type === 'energy' && question.selection === 'multiple' && index === 1
+          ? -multiplier
+          : multiplier,
       );
       addObservation(
         observations,

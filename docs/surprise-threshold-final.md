@@ -2,7 +2,7 @@
 
 ## Sample
 
-12 Golden Personas plus 10 deterministic complete raw-answer profiles, all beginning with 45 Question Answers. Surprise selection also requires: not Best Fit, not already considered, familiarity below 0.5, Entry Distance below Very High, and family diversity.
+Historical threshold audit using 12 Golden Personas plus 10 deterministic complete raw-answer profiles. The original run began with 45 answers; current Quick Discovery 1.1 uses 35. Surprise selection still requires: not Best Fit, not already considered, familiarity below 0.5, Entry Distance below Very High, and family diversity.
 
 | Threshold | Profiles with result | Surprise count | Average match | Minimum match | Family diversity | Mean conceptual overlap with Best Fit |
 |---:|---:|---:|---:|---:|---:|---:|

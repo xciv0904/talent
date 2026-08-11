@@ -63,13 +63,13 @@ describe('complete data QA', () => {
     }
   });
 
-  it('keeps exact balanced talent coverage across independent methods', () => {
+  it('keeps exact balanced talent coverage across three independent methods', () => {
     const coverage = getQuestionCoverage(QUICK_DISCOVERY_QUESTIONS);
     expect(coverage).toHaveLength(20);
     for (const item of coverage) {
-      expect(item.signalCount).toBe(4);
-      expect(new Set(item.questionIds).size).toBe(4);
-      expect(new Set(item.questionTypes).size).toBe(4);
+      expect(item.signalCount).toBe(3);
+      expect(new Set(item.questionIds).size).toBe(3);
+      expect(new Set(item.questionTypes).size).toBe(3);
     }
   });
 

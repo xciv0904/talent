@@ -45,7 +45,7 @@ The comparison combines the absolute talent score with its relative position amo
 
 ## Calibration guardrails
 
-- A complete 45-question assessment measures all 20 talents through four independent ability contexts.
+- A complete 35-question assessment measures all 20 talents through three independent ability methods and three distinct contexts. Five Energy questions separately collect one energizing and one draining activity in the same scenario.
 - At least 95% completion cannot become Low confidence solely because a talent is not prominent.
 - Strong career classification requires at least two demands met or exceeded, at least one core demand met, no multiple significant gaps, no high environment or energy risk, and adequate confidence.
 - Relative rank may prioritize exploration but cannot by itself erase an evidenced mismatch.

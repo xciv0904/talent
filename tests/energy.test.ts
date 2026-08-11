@@ -14,19 +14,29 @@ const communicationAbilityResponses: QuestionResponse[] = QUICK_DISCOVERY_QUESTI
   answeredAt: '2026-08-09T00:00:00.000Z',
 }));
 
-const energyResponse = (questionId: 'ENG01' | 'ENG06'): QuestionResponse => ({
-  questionId,
-  selectedOptionIds: ['communication'],
+const energyResponse = (communicationOrder: 'energizing' | 'draining'): QuestionResponse => ({
+  questionId: 'ENG01',
+  selectedOptionIds: communicationOrder === 'energizing'
+    ? ['communication', 'analytical_reasoning']
+    : ['analytical_reasoning', 'communication'],
   answeredAt: '2026-08-09T00:00:00.000Z',
 });
 
 describe('energy separation', () => {
+  it('requires both an energizing and a draining selection', () => {
+    expect(() => runAssessment(QUICK_DISCOVERY_QUESTIONS, [{
+      questionId: 'ENG01',
+      selectedOptionIds: ['communication'],
+      answeredAt: '2026-08-09T00:00:00.000Z',
+    }])).toThrow('requires one energizing and one draining selection');
+  });
+
   it('keeps ability identical when communication energy changes', () => {
     const energizing = scoreBaseTalents(
-      runAssessment(QUICK_DISCOVERY_QUESTIONS, [...communicationAbilityResponses, energyResponse('ENG01')]),
+      runAssessment(QUICK_DISCOVERY_QUESTIONS, [...communicationAbilityResponses, energyResponse('energizing')]),
     ).find(({ talentId }) => talentId === 'communication')!;
     const draining = scoreBaseTalents(
-      runAssessment(QUICK_DISCOVERY_QUESTIONS, [...communicationAbilityResponses, energyResponse('ENG06')]),
+      runAssessment(QUICK_DISCOVERY_QUESTIONS, [...communicationAbilityResponses, energyResponse('draining')]),
     ).find(({ talentId }) => talentId === 'communication')!;
 
     expect(energizing.score).toBe(1);

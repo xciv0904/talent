@@ -9,7 +9,7 @@ import type {
   TalentStatus,
 } from '../types';
 
-export const REQUIRED_QUESTION_COVERAGE = 4;
+export const REQUIRED_QUESTION_COVERAGE = 3;
 
 export const clamp = (value: number, min = 0, max = 1) => Math.min(max, Math.max(min, value));
 
@@ -34,7 +34,7 @@ export function calculateConfidence(input: ConfidenceInput): ConfidenceResult {
   if (
     input.questionCoverage >= 0.75 &&
     hasCrossMethodEvidence &&
-    input.crossMethodConsistency >= 0.65 &&
+    input.crossMethodConsistency >= 0.75 &&
     input.evidenceQuality >= 0.65
   ) {
     level = 'high';

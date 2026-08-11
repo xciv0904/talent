@@ -26,23 +26,21 @@ export function makeResponses(targetTalents: readonly TalentId[], seed: number):
         question.options.find((candidate) =>
           optionTalentIds(candidate, 'talentInterestSignals').some((talentId) => targetSet.has(talentId)),
         ) ?? option;
-    } else if (question.type === 'energy' && question.id < 'ENG06') {
+    } else if (question.type === 'energy') {
       option =
         question.options.find((candidate) =>
           optionTalentIds(candidate, 'energySignals').some((talentId) => targetSet.has(talentId)),
         ) ?? option;
     }
 
-    if (question.type === 'energy' && question.id >= 'ENG06') {
-      option =
-        question.options.find((candidate) =>
-          optionTalentIds(candidate, 'energySignals').every((talentId) => !targetSet.has(talentId)),
-        ) ?? option;
-    }
+    const drainingOption = question.type === 'energy'
+      ? question.options.find((candidate) => candidate.id !== option.id && optionTalentIds(candidate, 'energySignals').every((talentId) => !targetSet.has(talentId)))
+        ?? question.options.find((candidate) => candidate.id !== option.id)!
+      : undefined;
 
     return {
       questionId: question.id,
-      selectedOptionIds: [option.id],
+      selectedOptionIds: question.type === 'energy' ? [option.id, drainingOption!.id] : [option.id],
       scaleValue:
         question.type === 'behavior' || question.type === 'evidence'
           ? optionTalentIds(option, 'talentSignals').some((talentId) => targetSet.has(talentId))

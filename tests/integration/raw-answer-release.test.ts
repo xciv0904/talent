@@ -70,7 +70,7 @@ describe('release raw-answer end-to-end regression', () => {
     expect(SYNTHETIC_PROFILES.length).toBeGreaterThanOrEqual(20);
     for (const [index, pipeline] of syntheticPipelines.entries()) {
       expect(pipeline.rawAnswers, SYNTHETIC_PROFILES[index].id).toHaveLength(QUICK_DISCOVERY_QUESTIONS.length);
-      expect(pipeline.assessment.answeredQuestionIds).toHaveLength(45);
+      expect(pipeline.assessment.answeredQuestionIds).toHaveLength(35);
       expect(pipeline.assessment.observations.length).toBeGreaterThan(0);
       expect(pipeline.talentProfile.baseTalents).toHaveLength(20);
       expect(pipeline.talentProfile.compositeTalents).toHaveLength(12);
@@ -84,7 +84,7 @@ describe('release raw-answer end-to-end regression', () => {
 
   it('uses raw answers for all twelve Golden Personas in release distribution', () => {
     expect(goldenPipelines).toHaveLength(12);
-    expect(goldenPipelines.every(({ rawAnswers }) => rawAnswers.length === 45)).toBe(true);
+    expect(goldenPipelines.every(({ rawAnswers }) => rawAnswers.length === 35)).toBe(true);
     expect(goldenPipelines.every(({ matches }) => matches.length === 60)).toBe(true);
   });
 
@@ -162,7 +162,7 @@ describe('release raw-answer end-to-end regression', () => {
     const partial = consistent.filter(({ questionId }) => questionId === relevant[0].id);
     const contradictory = consistent.map((answer) => {
       const question = relevant.find(({ id }) => id === answer.questionId);
-      if (!question || (question.type !== 'forced_choice' && question.type !== 'evidence')) return answer;
+      if (!question || (question.type !== 'situational_choice' && question.type !== 'evidence')) return answer;
       const alternative = question.options.find((option) => !(talentId in (option.talentSignals ?? {})))!;
       return { ...answer, selectedOptionIds: [alternative.id], scaleValue: question.type === 'evidence' ? 5 : undefined };
     });
@@ -177,10 +177,10 @@ describe('release raw-answer end-to-end regression', () => {
   it('defines independent ability signals as separate questions and decision contexts', () => {
     for (const talent of runCareerDiscoveryPipeline(SYNTHETIC_PROFILES[0].responses).talentProfile.baseTalents) {
       const questions = QUICK_DISCOVERY_QUESTIONS.filter((question) => question.options.some((option) => talent.talentId in (option.talentSignals ?? {})));
-      expect(questions).toHaveLength(4);
-      expect(new Set(questions.map(({ id }) => id)).size).toBe(4);
-      expect(new Set(questions.map(({ type }) => type)).size).toBe(4);
-      expect(new Set(questions.map(({ prompt }) => prompt)).size).toBe(4);
+      expect(questions).toHaveLength(3);
+      expect(new Set(questions.map(({ id }) => id)).size).toBe(3);
+      expect(new Set(questions.map(({ type }) => type)).size).toBe(3);
+      expect(new Set(questions.map(({ prompt }) => prompt)).size).toBe(3);
     }
   });
 });

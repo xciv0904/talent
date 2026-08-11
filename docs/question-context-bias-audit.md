@@ -1,6 +1,6 @@
 # Question Context Bias Audit
 
-Audit scope: all 45 Quick Discovery questions. The classification records the **Public Beta wording before remediation**. `JOB-SPECIFIC` is reserved for an item whose signal cannot be measured without an occupational scenario; none of the core questions met that standard, so specialized wording was rewritten rather than retained.
+Historical audit scope: the original 45 Quick Discovery questions. The classification records the **Public Beta wording before remediation**. Quick Discovery 1.1 now contains 35 questions; FC01–FC05 and ENG06–ENG10 are retained here only as audit history and are no longer in the active core bank. `JOB-SPECIFIC` is reserved for an item whose signal cannot be measured without an occupational scenario; none met that standard.
 
 ## Classification summary
 

@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { QUICK_DISCOVERY_QUESTIONS } from '../src/data/questions';
 
 const INITIAL_CONTEXT_AUDIT = {
-  UNIVERSAL: ['BEH05', 'EVD01', 'EVD02', 'EVD03', 'EVD05', 'ENG02', 'ENG05', 'ENG07', 'INT01', 'INT02', 'INT04'],
-  MINOR_REWRITE: ['SJT02', 'SJT03', 'SJT04', 'FC01', 'FC03', 'FC05', 'BEH01', 'BEH02', 'BEH03', 'EVD04', 'ENG01', 'ENG03', 'ENG04', 'ENG06', 'ENG08', 'ENG10', 'INT05', 'ENV01', 'ENV03', 'ENV04', 'ENV05', 'VAL01', 'VAL02', 'VAL03'],
-  MAJOR_REWRITE: ['SJT01', 'SJT05', 'FC02', 'FC04', 'BEH04', 'ENG09', 'INT03', 'ENV02', 'VAL04', 'VAL05'],
+  UNIVERSAL: ['BEH05', 'EVD01', 'EVD02', 'EVD03', 'EVD05', 'ENG02', 'ENG05', 'INT01', 'INT02', 'INT04'],
+  MINOR_REWRITE: ['SJT02', 'SJT03', 'SJT04', 'BEH01', 'BEH02', 'BEH03', 'EVD04', 'ENG01', 'ENG03', 'ENG04', 'INT05', 'ENV01', 'ENV03', 'ENV04', 'ENV05', 'VAL01', 'VAL02', 'VAL03'],
+  MAJOR_REWRITE: ['SJT01', 'SJT05', 'BEH04', 'INT03', 'ENV02', 'VAL04', 'VAL05'],
   JOB_SPECIFIC: [],
 } as const;
 
@@ -60,12 +60,12 @@ function signalContractHash() {
 describe('Quick Discovery context neutrality', () => {
   it('audits every question exactly once', () => {
     const audited = Object.values(INITIAL_CONTEXT_AUDIT).flat();
-    expect(audited).toHaveLength(45);
-    expect(new Set(audited).size).toBe(45);
+    expect(audited).toHaveLength(35);
+    expect(new Set(audited).size).toBe(35);
     expect(new Set(audited)).toEqual(new Set(QUICK_DISCOVERY_QUESTIONS.map(({ id }) => id)));
-    expect(INITIAL_CONTEXT_AUDIT.UNIVERSAL).toHaveLength(11);
-    expect(INITIAL_CONTEXT_AUDIT.MINOR_REWRITE).toHaveLength(24);
-    expect(INITIAL_CONTEXT_AUDIT.MAJOR_REWRITE).toHaveLength(10);
+    expect(INITIAL_CONTEXT_AUDIT.UNIVERSAL).toHaveLength(10);
+    expect(INITIAL_CONTEXT_AUDIT.MINOR_REWRITE).toHaveLength(18);
+    expect(INITIAL_CONTEXT_AUDIT.MAJOR_REWRITE).toHaveLength(7);
     expect(INITIAL_CONTEXT_AUDIT.JOB_SPECIFIC).toHaveLength(0);
   });
 
@@ -77,14 +77,14 @@ describe('Quick Discovery context neutrality', () => {
     expect(questionText).not.toMatch(/你傾向如何|面對複雜情境|多方利害關係人|假設你是上班族/);
   });
 
-  it.each(contextPersonas)('$id can read all 45 questions without assumed experience', ({ description }) => {
+  it.each(contextPersonas)('$id can read all 35 questions without assumed experience', ({ description }) => {
     expect(description.length).toBeGreaterThan(20);
-    expect(QUICK_DISCOVERY_QUESTIONS).toHaveLength(45);
+    expect(QUICK_DISCOVERY_QUESTIONS).toHaveLength(35);
     expect(QUICK_DISCOVERY_QUESTIONS.every(({ scenario, prompt, options }) => scenario.length > 0 && prompt.length > 0 && options.every(({ label }) => label.length > 0))).toBe(true);
     expect(questionText.match(specializedWorkContext)?.[0]).toBeUndefined();
   });
 
-  it('preserves the complete pre-rewrite signal contract', () => {
-    expect(signalContractHash()).toBe('7fb2bf31');
+  it('preserves the complete 35-question signal contract', () => {
+    expect(signalContractHash()).toBe('3fe3da6b');
   });
 });

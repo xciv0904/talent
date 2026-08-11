@@ -16,7 +16,7 @@ describe('measurement model separation', () => {
       for (const talent of talents) {
         confidences[talent.confidence.level] += 1;
         if (talent.status === 'insufficient_evidence') insufficient += 1;
-        const legacyConsistencyHigh = talent.measurement.positiveSignals === 0 || talent.measurement.positiveSignals === 4;
+        const legacyConsistencyHigh = talent.measurement.positiveSignals === 0 || talent.measurement.positiveSignals === 3;
         const legacyLowConfidence = !legacyConsistencyHigh;
         const legacyStatusWasInsufficient = legacyLowConfidence || (
           talent.score < 0.35
@@ -24,10 +24,10 @@ describe('measurement model separation', () => {
           && (talent.energyScore ?? 0) > -0.5
         );
         if (legacyStatusWasInsufficient) legacyInsufficient += 1;
-        expect(talent.measurement.opportunities).toBe(4);
-        expect(talent.measurement.answeredOpportunities).toBe(4);
-        expect(talent.measurement.validResponses).toBe(4);
-        expect(talent.measurement.positiveSignals + talent.measurement.negativeOrCompetingSignals).toBe(4);
+        expect(talent.measurement.opportunities).toBe(3);
+        expect(talent.measurement.answeredOpportunities).toBe(3);
+        expect(talent.measurement.validResponses).toBe(3);
+        expect(talent.measurement.positiveSignals + talent.measurement.negativeOrCompetingSignals).toBe(3);
       }
     }
 
@@ -40,14 +40,14 @@ describe('measurement model separation', () => {
 
   it('does not turn 95%+ completion into Low confidence', () => {
     for (const profile of SYNTHETIC_PROFILES) {
-      const answers = profile.responses.slice(0, -2);
+      const answers = profile.responses.slice(0, -1);
       expect(answers.length / QUICK_DISCOVERY_QUESTIONS.length).toBeGreaterThanOrEqual(0.95);
       const talents = runCareerDiscoveryPipeline(answers).talentProfile.baseTalents;
       expect(talents.every(({ confidence }) => confidence.level !== 'low')).toBe(true);
     }
   });
 
-  it('treats four answered competing choices as measured low strength, not missing evidence', () => {
+  it('treats three answered competing choices as measured low strength, not missing evidence', () => {
     const target = 'communication' as const;
     const relevant = QUICK_DISCOVERY_QUESTIONS.filter((question) =>
       question.options.some((option) => target in (option.talentSignals ?? {})),
@@ -63,7 +63,7 @@ describe('measurement model separation', () => {
 
     expect(talent.score).toBe(0);
     expect(talent.measurement.positiveSignals).toBe(0);
-    expect(talent.measurement.negativeOrCompetingSignals).toBe(4);
+    expect(talent.measurement.negativeOrCompetingSignals).toBe(3);
     expect(talent.confidence.level).toBe('high');
     expect(talent.status).toBe('observed_not_prominent');
   });

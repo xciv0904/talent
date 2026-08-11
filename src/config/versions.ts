@@ -1,5 +1,5 @@
 export const PRODUCT_VERSIONS = {
-  assessmentVersion: '1.0.1',
+  assessmentVersion: '1.1.0',
   talentModelVersion: '2.0.0',
   careerDatasetVersion: '1.0.0',
   matchingEngineVersion: '2.1.0',

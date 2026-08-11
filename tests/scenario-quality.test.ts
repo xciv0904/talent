@@ -27,7 +27,7 @@ function jaccard(left: Set<string>, right: Set<string>): number {
 
 describe('Quick Discovery self-contained scenario quality', () => {
   it('gives every question a complete independent mini-scenario', () => {
-    expect(QUICK_DISCOVERY_QUESTIONS).toHaveLength(45);
+    expect(QUICK_DISCOVERY_QUESTIONS).toHaveLength(35);
     for (const question of QUICK_DISCOVERY_QUESTIONS) {
       const sentenceCount = question.scenario.split(/[。！？]/).filter(Boolean).length;
       expect(question.scenario.length, question.id).toBeGreaterThanOrEqual(35);
@@ -46,14 +46,14 @@ describe('Quick Discovery self-contained scenario quality', () => {
     expect(allVisibleText).not.toMatch(vagueSelfReportTerms);
   });
 
-  it('uses every scenario domain without letting one context dominate', () => {
+  it('keeps every scenario domain represented without letting one context dominate', () => {
     const counts = Object.fromEntries(SCENARIO_DOMAINS.map((domain) => [
       domain,
       QUICK_DISCOVERY_QUESTIONS.filter((question) => question.scenarioDomain === domain).length,
     ]));
     expect(Object.keys(counts)).toHaveLength(14);
     for (const domain of SCENARIO_DOMAINS) {
-      expect(counts[domain], domain).toBeGreaterThanOrEqual(2);
+      expect(counts[domain], domain).toBeGreaterThanOrEqual(1);
       expect(counts[domain], domain).toBeLessThanOrEqual(4);
     }
   });
@@ -63,7 +63,7 @@ describe('Quick Discovery self-contained scenario quality', () => {
       const signalQuestions = QUICK_DISCOVERY_QUESTIONS.filter((question) =>
         question.options.some((option) => option.talentSignals?.[talentId] !== undefined));
       const domains = new Set(signalQuestions.map((question) => question.scenarioDomain));
-      expect(signalQuestions, talentId).toHaveLength(4);
+      expect(signalQuestions, talentId).toHaveLength(3);
       expect(domains.size, talentId).toBeGreaterThanOrEqual(3);
     }
   });

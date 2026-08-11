@@ -106,6 +106,23 @@ const choice = (
   options,
 });
 
+const energyComparison = (
+  id: string,
+  definition: ScenarioDefinition,
+  options: QuestionOption[],
+): ChoiceQuestion => ({
+  ...choice(
+    id,
+    'energy',
+    definition,
+    '請依序選兩項：先選做完仍較有精神的，再選做久最消耗的。',
+    options,
+  ),
+  description: '第一個選擇代表「較有精神」，第二個選擇代表「較消耗」。兩項不能相同。',
+  selection: 'multiple',
+  maxSelections: 2,
+});
+
 const scaled = (
   id: string,
   type: 'behavior' | 'evidence',
@@ -140,13 +157,13 @@ const situationalQuestions: Question[] = [
     talentOption('initiative', '先做一個低風險嘗試，讓事情重新動起來'),
     talentOption('precision', '重新核對活動要求、已有紀錄和執行細節'),
   ]),
-  choice('SJT02', 'situational_choice', { domain: 'information', scenario: '朋友請你接手一次搬家準備。一部分物品已經打包，但清單、標籤和相關訊息散落在不同地方。', decisionPoint: '接手進行中且資訊分散的事情' }, '你比較可能先做什麼？', [
+  choice('SJT02', 'situational_choice', { domain: 'unfamiliar_task', scenario: '朋友請你接手一次搬家準備。一部分物品已經打包，但清單、標籤和相關訊息散落在不同地方。', decisionPoint: '接手進行中且資訊分散的事情' }, '你比較可能先做什麼？', [
     talentOption('pattern_recognition', '比對不同清單，找出反覆出現或互相矛盾的內容'),
     talentOption('communication', '問相關的人，各自已經做了什麼、還缺什麼'),
     talentOption('planning', '整理已完成和互相影響的部分，再排接下來順序'),
     talentOption('adaptability', '先處理眼前最急著要用的物品，再邊做邊調整'),
   ]),
-  choice('SJT03', 'situational_choice', { domain: 'limited_time', scenario: '你和兩個人安排一天外出。列出的四項活動不可能全部完成，而且每個人重視的項目不同。', decisionPoint: '在有限時間內取捨多個合理選項' }, '你最自然會先怎麼做？', [
+  choice('SJT03', 'situational_choice', { domain: 'choice_decision', scenario: '你和兩個人安排一天外出。列出的四項活動不可能全部完成，而且每個人重視的項目不同。', decisionPoint: '在有限時間內取捨多個合理選項' }, '你最自然會先怎麼做？', [
     talentOption('quantitative_reasoning', '把各活動需要的時間、費用和移動距離列出來比較'),
     talentOption('influence', '先了解大家各自最在意什麼，再提出較可能被接受的安排'),
     talentOption('prioritization', '先訂判準，明確決定哪些暫時不做'),
@@ -163,39 +180,6 @@ const situationalQuestions: Question[] = [
     talentOption('structuring_ambiguity', '整理已知、未知與待決策項目'),
     talentOption('coordination', '整理每個人負責的部分、需要交換的資訊與接續方式'),
     talentOption('conflict_navigation', '讓大家說出不同立場背後的顧慮'),
-  ]),
-];
-
-const forcedChoiceQuestions: Question[] = [
-  choice('FC01', 'forced_choice', { domain: 'social_interaction', scenario: '社區公告欄要說明一套新的物品分類方式，但試看的人對內容有不同理解。你和另外三個人各自可以先處理一個部分。', decisionPoint: '在公開說明出現理解差異時選擇貢獻' }, '你比較願意先負責哪一項？', [
-    talentOption('communication', '重寫說明，讓不同讀者都能理解實際怎麼做'),
-    talentOption('analytical_reasoning', '比對說明和實際分類方式，找出哪裡有矛盾或遺漏'),
-    talentOption('persistence', '持續追蹤試用反應，把反覆出現的問題一項項修正'),
-    talentOption('creative_ideation', '畫出幾種不同的說明方式，再選一種試給別人看'),
-  ]),
-  choice('FC02', 'forced_choice', { domain: 'quality_check', scenario: '四個人完成了一本活動手冊初稿，但在送印前只剩一小時，時間只夠重點改善一個部分。', decisionPoint: '成果送出前只能優先強化一項' }, '你比較可能先做哪一項？', [
-    talentOption('precision', '逐頁核對內容是否正確，格式與用詞是否一致'),
-    talentOption('coordination', '確認每個人要修哪幾頁，以及修完後怎麼接給下一個人'),
-    talentOption('learning_agility', '先學會一個可加快檢查的工具，再立刻示範給其他人用'),
-    talentOption('influence', '整理最需要改的理由，說服大家集中處理同一個關鍵部分'),
-  ]),
-  choice('FC03', 'forced_choice', { domain: 'choice_decision', scenario: '你和兩個人要製作一本送給朋友的紀念冊。大家提出兩種都做得完的方式，現在必須選一種才能開始。', decisionPoint: '兩種可行方式中選擇一種執行' }, '你最不願意放棄哪一種判斷方式？', [
-    talentOption('planning', '先把製作過程拆成階段，排好先後關係再選'),
-    talentOption('adaptability', '選一種保留調整空間的做法，之後依實際進度改變'),
-    talentOption('quantitative_reasoning', '先比較兩種做法需要的時間、材料和頁數再選'),
-    talentOption('emotional_perception', '先想收到紀念冊的人最在意什麼，再選較貼近的做法'),
-  ]),
-  choice('FC04', 'forced_choice', { domain: 'group_activity', scenario: '你參加一個每週聚會的社區練習小組。四種負責內容原本每週輪換，現在每個人可以選一種連續負責一個月。', decisionPoint: '在持續合作中選擇願意長期承擔的貢獻' }, '你比較願意選哪一種？', [
-    talentOption('prioritization', '每週從大家想練的內容中決定本週焦點'),
-    talentOption('teaching_coaching', '陪不熟悉的人練習，用提問和回饋幫他逐步上手'),
-    talentOption('pattern_recognition', '紀錄每週出現的狀況，找出反覆影響練習的規律'),
-    talentOption('initiative', '沒人確定下週安排時，先提出一個可以開始的方案'),
-  ]),
-  choice('FC05', 'forced_choice', { domain: 'unfamiliar_task', scenario: '你和兩個人拿到一箱混在一起的零件與一張簡單示意圖。大家對最後要組成什麼的理解不同，還不能開始組裝。', decisionPoint: '實作前先釐清未定義的成果' }, '你最自然會先怎麼做？', [
-    talentOption('structuring_ambiguity', '先把已知、未知和需要決定的部分整理成框架'),
-    talentOption('conflict_navigation', '先讓每個人說明理解差異，找出真正卡住的分歧'),
-    talentOption('verbal_reasoning', '先把示意圖上的用詞和每個人的說法定義清楚'),
-    talentOption('spatial_mechanical', '先把零件擺成幾種可能結構，用實體關係來對齊理解'),
   ]),
 ];
 
@@ -265,69 +249,36 @@ const evidenceQuestions: Question[] = [
   ]),
 ];
 
-const positiveEnergyQuestions: Question[] = [
-  choice('ENG01', 'energy', { domain: 'planning', scenario: '你剛花一小時整理好一個共用置物區，還有三十分鐘可以自由處理一件後續事情。四件事都不急，也都有人之後可以接手。', decisionPoint: '完成一段投入後選擇願意繼續的活動' }, '哪一件事最可能讓你還想繼續投入？', [
+const energyQuestions: Question[] = [
+  energyComparison('ENG01', { domain: 'planning', scenario: '一個共用置物區剛整理完成。你可以選一項後續責任，在接下來一週每天處理三十分鐘；四項都不急，也不影響整理成果。', decisionPoint: '比較不同活動帶來的持續能量與消耗' }, [
     energyOption('analytical_reasoning', '追查哪些物品總是放錯位置，以及真正原因', 1),
     energyOption('communication', '寫一份讓第一次來的人也看得懂的使用說明', 1),
     energyOption('planning', '安排接下來一個月的整理步驟與檢查時間', 1),
     energyOption('creative_ideation', '畫出幾種完全不同的收納與使用方式', 1),
   ]),
-  choice('ENG02', 'energy', { domain: 'helping_someone', scenario: '你在一場物品募集活動協助了一個下午，現在可選一件事再做四十分鐘。四個部分都還需要人，但不會影響活動是否完成。', decisionPoint: '投入數小時後選擇仍願意承擔的協助' }, '哪一項最可能讓你做完後仍有精神？', [
+  energyComparison('ENG02', { domain: 'helping_someone', scenario: '一場物品募集活動還會持續四天，你可以固定負責以下一項。這些工作同樣重要，而且每一項你都做得到。', decisionPoint: '比較不同協助方式帶來的持續能量與消耗' }, [
     energyOption('pattern_recognition', '比對收到的物品，找出數量與類型反覆變化的規律', 1),
     energyOption('emotional_perception', '聽一位參與者說明困難，找出他沒有直接說出的需要', 1),
     energyOption('initiative', '看到一個沒人處理的缺口，從零開始設計做法並動手', 1),
     energyOption('precision', '逐件核對標籤與數量，把錯誤修到穩定', 1),
   ]),
-  choice('ENG03', 'energy', { domain: 'unexpected_change', scenario: '三個人正在戶外準備野餐，突然下起大雨。大家先把物品移到遮蔽處，接著可以各自選一件事，重新安排剩下的下午。', decisionPoint: '突發變化後選擇最能恢復動力的活動' }, '哪一項最可能讓你重新有動力？', [
+  energyComparison('ENG03', { domain: 'unexpected_change', scenario: '三個人正在戶外準備野餐，突然下起大雨。物品移到遮蔽處後，有四種方式可以重新安排剩下的下午，而且每一種你都做得到。', decisionPoint: '比較突發變化後不同活動帶來的能量與消耗' }, [
     energyOption('quantitative_reasoning', '比較各個室內選項的時間、費用和距離後做判斷', 1),
     energyOption('teaching_coaching', '陪不熟悉桌遊的人練一輪，直到他能自己玩', 1),
     energyOption('prioritization', '決定今天最重要的一項體驗，放下其他安排', 1),
     energyOption('adaptability', '利用現有物品立刻改出一個不受下雨影響的新活動', 1),
   ]),
-  choice('ENG04', 'energy', { domain: 'creative_task', scenario: '一個公共空間有面空白牆面，四種佈置構想都已有人提出。你有兩小時可自由選一件事，讓其中一個構想更接近完成。', decisionPoint: '在創作活動中選擇最期待投入的內容' }, '你最期待先做哪一項？', [
+  energyComparison('ENG04', { domain: 'creative_task', scenario: '一個公共空間有面空白牆面，四種佈置構想都已有人提出。四種工作同樣重要，也都需要連續投入幾天才能完成。', decisionPoint: '比較創作活動中不同工作帶來的能量與消耗' }, [
     energyOption('verbal_reasoning', '修改牆面文字，讓每個主張和用詞都精確連貫', 1),
     energyOption('influence', '整理構想的價值，向使用空間的人爭取支持', 1),
     energyOption('coordination', '安排參與者、材料和使用時段能順利接上', 1),
     energyOption('persistence', '接手最費時的一部分，持續把它做到完成', 1),
   ]),
-  choice('ENG05', 'energy', { domain: 'learning', scenario: '你第一次接觸一款零件很多的桌上遊戲，盒內只有簡短規則和一張配置圖。身邊另外兩個人也還不確定該怎麼開始。', decisionPoint: '面對陌生系統時選擇容易進入專注的活動' }, '哪一項最容易讓你進入專注狀態？', [
+  energyComparison('ENG05', { domain: 'learning', scenario: '你第一次接觸一款零件很多的桌上遊戲，盒內只有簡短規則和一張配置圖。四種理解方式都可能有用，也都需要持續投入一段時間。', decisionPoint: '比較理解陌生系統時不同活動帶來的能量與消耗' }, [
     energyOption('spatial_mechanical', '把零件擺出來，測試它們在空間和操作上如何配合', 1),
     energyOption('learning_agility', '快速讀完陌生規則，邊試邊吸收新的玩法', 1),
     energyOption('structuring_ambiguity', '把零散規則整理成開始、進行和結束三個階段', 1),
     energyOption('conflict_navigation', '釐清兩個人對規則的不同理解，找出都能接受的試法', 1),
-  ]),
-];
-
-const drainingEnergyQuestions: Question[] = [
-  choice('ENG06', 'energy', { domain: 'individual_problem', scenario: '你要用一週改善自己的日常安排，每天都得重複處理同一類活動四十分鐘。四種活動都能帶來幫助，也都在你的能力範圍內。', decisionPoint: '判斷長時間重複哪種活動最消耗能量' }, '哪一項最可能讓你到週末感到耗盡？', [
-    energyOption('analytical_reasoning', '每天追查一個不順的原因，再驗證自己的推測', -1),
-    energyOption('communication', '每天向不同的人說明安排，並逐一回應問題', -1),
-    energyOption('planning', '每天更新步驟、時間和各項安排的前後關係', -1),
-    energyOption('creative_ideation', '每天提出幾個尚未試過的新做法', -1),
-  ]),
-  choice('ENG07', 'energy', { domain: 'quality_check', scenario: '你和幾個人連續三晚整理一本社區資源小冊，每晚都可以選一種固定責任。四種責任同樣重要，而且你都有能力完成。', decisionPoint: '判斷持續承擔哪種責任後最需要休息' }, '哪一項做久後最可能讓你需要獨處或休息？', [
-    energyOption('pattern_recognition', '長時間比對不同頁面的資訊，找出反覆出現的規律', -1),
-    energyOption('emotional_perception', '持續聽取提供資料者的顧慮，判斷他們沒直接說出的需要', -1),
-    energyOption('initiative', '每晚都先決定如何開始，並承擔做法還不確定的部分', -1),
-    energyOption('precision', '逐字核對內容，長時間維持零錯誤和細節警覺', -1),
-  ]),
-  choice('ENG08', 'energy', { domain: 'limited_time', scenario: '一場社區活動三天後開始，但報名人數和可用空間每天都在變。你要連續三天負責其中一類高壓內容，每一類都能完成。', decisionPoint: '時間有限且條件變動時辨認額外能量消耗' }, '哪一項最可能額外消耗你的能量？', [
-    energyOption('quantitative_reasoning', '反覆重算人數、份量和空間差異，確認數字仍可行', -1),
-    energyOption('teaching_coaching', '逐一帶不同熟悉程度的人練習，配合各自的學習速度', -1),
-    energyOption('prioritization', '每天替彼此衝突的需求重新做困難取捨', -1),
-    energyOption('adaptability', '隨著新消息頻繁更換做法和做事節奏', -1),
-  ]),
-  choice('ENG09', 'energy', { domain: 'social_interaction', scenario: '四個人要共同決定一個空間的使用方式，但對規則有不同意見。你可以選一項責任，協助大家在今天結束前形成可執行的決定。', decisionPoint: '共同決策中辨認做得到但最耗能的責任' }, '哪一項即使做得不差，事後仍最容易讓你疲累？', [
-    energyOption('verbal_reasoning', '逐句確認規則裡的定義和理由是否精確', -1),
-    energyOption('influence', '整理一套理由，說服原本反對的人改變決定', -1),
-    energyOption('coordination', '追蹤每個人答應處理的事，確認前後能接上', -1),
-    energyOption('persistence', '討論幾次受阻後仍持續推進，直到形成決定', -1),
-  ]),
-  choice('ENG10', 'energy', { domain: 'information', scenario: '你拿到一盒混在一起的圖卡、零件和簡短說明，需要用兩小時把它整理成別人能接手使用的狀態。四種整理方式都可行。', decisionPoint: '複雜資訊與實體材料中辨認最耗腦力的活動' }, '哪一項最容易讓你覺得腦力透支？', [
-    energyOption('spatial_mechanical', '持續推想多個零件的空間位置與互動方式', -1),
-    energyOption('learning_agility', '短時間讀懂大量陌生名詞與使用規則', -1),
-    energyOption('structuring_ambiguity', '替零散又不完整的內容建立清楚分類和框架', -1),
-    energyOption('conflict_navigation', '處理兩位提供資料者對分類方式的高張力分歧', -1),
   ]),
 ];
 
@@ -432,11 +383,9 @@ const valueQuestions: Question[] = [
 
 export const QUICK_DISCOVERY_QUESTIONS = [
   ...situationalQuestions,
-  ...forcedChoiceQuestions,
   ...behaviorQuestions,
   ...evidenceQuestions,
-  ...positiveEnergyQuestions,
-  ...drainingEnergyQuestions,
+  ...energyQuestions,
   ...interestQuestions,
   ...environmentQuestions,
   ...valueQuestions,

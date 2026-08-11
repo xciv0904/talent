@@ -10,7 +10,7 @@ const completedState = () => {
   const pipeline = runCareerDiscoveryPipeline(SYNTHETIC_PROFILES[0].responses);
   const state = createInitialAppState();
   state.answers = [...SYNTHETIC_PROFILES[0].responses];
-  state.assessmentProgress = { currentIndex: 44, completed: true, updatedAt: '2026-08-09T00:00:00.000Z' };
+  state.assessmentProgress = { currentIndex: 34, completed: true, updatedAt: '2026-08-09T00:00:00.000Z' };
   state.talentProfile = pipeline.talentProfile;
   state.careerResults = { matches: pipeline.matches, categories: pipeline.categories, profiles: pipeline.profiles, versions: CURRENT_RESULT_VERSIONS };
   return state;
@@ -81,7 +81,7 @@ describe('Public Beta feedback and diagnostics', () => {
   it('builds a complete diagnostic export without device information', () => {
     const report = buildDiagnosticReport(completedState());
     expect(report.versions).toEqual(CURRENT_RESULT_VERSIONS);
-    expect(report.questionAnswers).toHaveLength(45);
+    expect(report.questionAnswers).toHaveLength(35);
     expect(report.signalObservations.length).toBeGreaterThan(0);
     expect(report.normalizedSignals.baseTalents).toHaveLength(20);
     expect(report.compositeTalents).toHaveLength(12);
@@ -113,7 +113,7 @@ describe('Public Beta feedback and diagnostics', () => {
     const current = completedState();
     const legacy = { ...current, schemaVersion: 2, sessionId: undefined, betaFeedback: undefined };
     const migrated = parseStoredState(JSON.stringify(legacy));
-    expect(migrated.answers).toHaveLength(45);
+    expect(migrated.answers).toHaveLength(35);
     expect(migrated.assessmentProgress.completed).toBe(false);
     expect(migrated.talentProfile).toBeNull();
     expect(migrated.careerResults).toBeNull();

@@ -1,37 +1,38 @@
 # Quick Discovery Question Coverage
 
-Coverage counts independent questions containing an ability signal for a Base Talent. Energy and interest questions are intentionally excluded from ability coverage because they measure separate dimensions.
+Quick Discovery 1.1 uses 35 questions. Ability coverage counts independent questions containing a Base Talent signal. Energy and interest remain separate dimensions and are not counted as ability evidence.
 
 | Talent | Question IDs | Signal count | Question types |
 | --- | --- | ---: | --- |
-| analytical_reasoning | SJT01, FC01, BEH01, EVD01 | 4 | situational_choice, forced_choice, behavior, evidence |
-| pattern_recognition | SJT02, FC04, BEH05, EVD03 | 4 | situational_choice, forced_choice, behavior, evidence |
-| quantitative_reasoning | SJT03, FC03, BEH03, EVD02 | 4 | situational_choice, forced_choice, behavior, evidence |
-| verbal_reasoning | SJT04, FC05, BEH04, EVD04 | 4 | situational_choice, forced_choice, behavior, evidence |
-| spatial_mechanical | SJT04, FC05, BEH05, EVD05 | 4 | situational_choice, forced_choice, behavior, evidence |
-| creative_ideation | SJT04, FC01, BEH01, EVD04 | 4 | situational_choice, forced_choice, behavior, evidence |
-| learning_agility | SJT05, FC02, BEH02, EVD05 | 4 | situational_choice, forced_choice, behavior, evidence |
-| structuring_ambiguity | SJT05, FC05, BEH05, EVD05 | 4 | situational_choice, forced_choice, behavior, evidence |
-| emotional_perception | SJT01, FC03, BEH01, EVD04 | 4 | situational_choice, forced_choice, behavior, evidence |
-| communication | SJT02, FC01, BEH02, EVD02 | 4 | situational_choice, forced_choice, behavior, evidence |
-| influence | SJT03, FC02, BEH04, EVD03 | 4 | situational_choice, forced_choice, behavior, evidence |
-| teaching_coaching | SJT04, FC04, BEH04, EVD01 | 4 | situational_choice, forced_choice, behavior, evidence |
-| coordination | SJT05, FC02, BEH03, EVD01 | 4 | situational_choice, forced_choice, behavior, evidence |
-| conflict_navigation | SJT05, FC05, BEH04, EVD05 | 4 | situational_choice, forced_choice, behavior, evidence |
-| initiative | SJT01, FC04, BEH05, EVD02 | 4 | situational_choice, forced_choice, behavior, evidence |
-| planning | SJT02, FC03, BEH01, EVD03 | 4 | situational_choice, forced_choice, behavior, evidence |
-| prioritization | SJT03, FC04, BEH03, EVD04 | 4 | situational_choice, forced_choice, behavior, evidence |
-| precision | SJT01, FC02, BEH02, EVD02 | 4 | situational_choice, forced_choice, behavior, evidence |
-| adaptability | SJT02, FC03, BEH02, EVD01 | 4 | situational_choice, forced_choice, behavior, evidence |
-| persistence | SJT03, FC01, BEH03, EVD03 | 4 | situational_choice, forced_choice, behavior, evidence |
+| analytical_reasoning | SJT01, BEH01, EVD01 | 3 | situational_choice, behavior, evidence |
+| pattern_recognition | SJT02, BEH05, EVD03 | 3 | situational_choice, behavior, evidence |
+| quantitative_reasoning | SJT03, BEH03, EVD02 | 3 | situational_choice, behavior, evidence |
+| verbal_reasoning | SJT04, BEH04, EVD04 | 3 | situational_choice, behavior, evidence |
+| spatial_mechanical | SJT04, BEH05, EVD05 | 3 | situational_choice, behavior, evidence |
+| creative_ideation | SJT04, BEH01, EVD04 | 3 | situational_choice, behavior, evidence |
+| learning_agility | SJT05, BEH02, EVD05 | 3 | situational_choice, behavior, evidence |
+| structuring_ambiguity | SJT05, BEH05, EVD05 | 3 | situational_choice, behavior, evidence |
+| emotional_perception | SJT01, BEH01, EVD04 | 3 | situational_choice, behavior, evidence |
+| communication | SJT02, BEH02, EVD02 | 3 | situational_choice, behavior, evidence |
+| influence | SJT03, BEH04, EVD03 | 3 | situational_choice, behavior, evidence |
+| teaching_coaching | SJT04, BEH04, EVD01 | 3 | situational_choice, behavior, evidence |
+| coordination | SJT05, BEH03, EVD01 | 3 | situational_choice, behavior, evidence |
+| conflict_navigation | SJT05, BEH04, EVD05 | 3 | situational_choice, behavior, evidence |
+| initiative | SJT01, BEH05, EVD02 | 3 | situational_choice, behavior, evidence |
+| planning | SJT02, BEH01, EVD03 | 3 | situational_choice, behavior, evidence |
+| prioritization | SJT03, BEH03, EVD04 | 3 | situational_choice, behavior, evidence |
+| precision | SJT01, BEH02, EVD02 | 3 | situational_choice, behavior, evidence |
+| adaptability | SJT02, BEH02, EVD01 | 3 | situational_choice, behavior, evidence |
+| persistence | SJT03, BEH03, EVD03 | 3 | situational_choice, behavior, evidence |
 
 ## Balance check
 
-- Minimum signals per Talent: 4
-- Maximum signals per Talent: 4
-- Imbalance: 0
-- Independent ability methods per Talent: 4
-- Energy exposure: each Talent appears once in an energizing question and once in an energy-cost question.
-- RIASEC exposure: all six dimensions are represented across INT01–INT05; the same options separately preserve Talent-specific interest for Talent Status.
+- Ability questions: 15.
+- Minimum and maximum signals per Base Talent: 3; imbalance: 0.
+- Independent ability methods per Talent: 3.
+- Energy questions: 5. Each asks for one energizing and one draining activity in the same scenario, so positive and negative energy are not paraphrased into separate pages.
+- Interest questions: 5; all six RIASEC dimensions and all Talent-interest options remain represented.
+- Environment and Work Style questions: 5; all contracted dimensions remain represented.
+- Values questions: 5; all contracted value dimensions remain represented.
 
-The automated coverage test recomputes these values from the question bank so this document cannot replace executable validation.
+The automated coverage and signal-contract tests recompute these values from the question bank.
