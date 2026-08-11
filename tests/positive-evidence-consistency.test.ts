@@ -19,8 +19,11 @@ const alignment = (
 ): AbilityAlignment => ({
   talentId,
   talentName: talentId,
-  userEvidence: state === 'insufficient_evidence' ? [] : [{ id: `e_${talentId}`, source: 'question', talentId, description: '實際作答證據', strength: 0.8 }],
-  userSignalLevel: state === 'insufficient_evidence' ? 'insufficient_evidence' : state === 'low_overlap' ? 'low' : 'high',
+  userEvidence: state === 'unknown' ? [] : [{ id: `e_${talentId}`, source: 'question', talentId, description: '實際作答證據', strength: 0.8 }],
+  userSignalLevel: state === 'unknown' ? 'insufficient_evidence' : state === 'significant_gap' ? 'low' : 'high',
+  userAbilityScore: 0.8,
+  demandCapabilityScore: 0.8,
+  relativeTalentPercentile: 0.9,
   careerDemand: 0.8,
   importance,
   relevantCareerTasks: ['完成核心工作任務'],
@@ -29,15 +32,15 @@ const alignment = (
 });
 
 const supported = [
-  alignment('strong_alignment', 'core', 'analytical_reasoning'),
-  alignment('moderate_alignment', 'supporting', 'pattern_recognition'),
+  alignment('exceeds_requirement', 'core', 'analytical_reasoning'),
+  alignment('meets_requirement', 'supporting', 'pattern_recognition'),
 ];
 
 describe('positive evidence gate and recommendation consistency', () => {
   it('Case A: rank #1 with zero positive talent evidence is never very suitable', () => {
     const unknown = [
-      alignment('insufficient_evidence', 'core', 'analytical_reasoning'),
-      alignment('insufficient_evidence', 'supporting', 'pattern_recognition'),
+      alignment('unknown', 'core', 'analytical_reasoning'),
+      alignment('unknown', 'supporting', 'pattern_recognition'),
     ];
     const gate = evaluatePositiveEvidenceGate(unknown, 'high', 'low', 'low');
     const decision = decideRecommendation({ relativePercentile: 1, fitSeparation: 0.2, evidenceGate: gate, interestAlignment: 0.8, workStyleAlignment: 0.8, environmentFriction: 'low', energyRisk: 'low', explicitMismatch: false });
@@ -57,8 +60,8 @@ describe('positive evidence gate and recommendation consistency', () => {
 
   it('Case C: high interest with insufficient ability evidence remains exploratory', () => {
     const gate = evaluatePositiveEvidenceGate([
-      alignment('insufficient_evidence', 'core', 'creative_ideation'),
-      alignment('insufficient_evidence', 'supporting', 'verbal_reasoning'),
+      alignment('unknown', 'core', 'creative_ideation'),
+      alignment('unknown', 'supporting', 'verbal_reasoning'),
     ], 'low', 'low', 'low');
     const decision = decideRecommendation({ relativePercentile: 0.98, fitSeparation: 0.1, evidenceGate: gate, interestAlignment: 0.92, workStyleAlignment: 0.6, environmentFriction: 'low', energyRisk: 'low', explicitMismatch: false });
     expect(decision.classification).toBe('moderate');

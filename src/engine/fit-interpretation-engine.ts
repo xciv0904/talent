@@ -1,6 +1,7 @@
 import { CAREER_PROFILES, PUBLIC_CAREER_GROUPS } from '../data/careers';
 import { QUICK_DISCOVERY_QUESTIONS } from '../data/questions';
 import { BASE_TALENTS } from '../data/talents';
+import { careerDemandCapabilityScore } from './talent-engine';
 import type {
   AbilityAlignment,
   CareerMatchResult,
@@ -79,9 +80,8 @@ function responseEvidenceForTalent(
 }
 
 function signalLevel(talent: TalentScore): UserSignalLevel {
-  const adequateOpportunity = talent.confidence.level !== 'low'
-    && talent.confidence.questionCoverage >= 0.75
-    && talent.confidence.evidenceCount >= 4;
+  const adequateOpportunity = (talent.measurement?.answeredOpportunities ?? talent.confidence.evidenceCount) >= 2
+    && talent.confidence.questionCoverage >= 0.5;
   if (!adequateOpportunity) return 'insufficient_evidence';
   if (talent.score >= 0.65) return 'high';
   if (talent.score >= 0.4) return 'moderate';
@@ -92,12 +92,12 @@ function alignmentLevel(
   level: UserSignalLevel,
   score: number,
   demand: number,
-  positiveEvidenceCount: number,
 ): AbilityAlignment['alignment'] {
-  if (level === 'insufficient_evidence') return 'insufficient_evidence';
-  if (level === 'high' && score >= demand * 0.72 && positiveEvidenceCount >= 2) return 'strong_alignment';
-  if ((level === 'high' || level === 'moderate') && score >= demand * 0.5 && positiveEvidenceCount >= 1) return 'moderate_alignment';
-  return 'low_overlap';
+  if (level === 'insufficient_evidence') return 'unknown';
+  if (score >= Math.min(1, demand + 0.12)) return 'exceeds_requirement';
+  if (score >= demand * 0.8 || score >= demand - 0.12) return 'meets_requirement';
+  if (score >= demand * 0.45) return 'partial_gap';
+  return 'significant_gap';
 }
 
 function importanceBands(requirements: ReadonlyMap<TalentId, number>) {
@@ -124,9 +124,9 @@ function buildAbilityAlignmentsFromRequirements(
       const definition = BASE_TALENTS.find((item) => item.id === talentId);
       if (!talent || !definition) return [];
       const level = signalLevel(talent);
+      const demandCapability = careerDemandCapabilityScore(talentScores, talentId);
       const positiveEvidence = talent.evidence.filter(({ description, strength }) => description.length > 0 && strength > 0);
-      const independentPositiveEvidence = new Set(positiveEvidence.map(({ questionId, id }) => questionId ?? id));
-      const alignment = alignmentLevel(level, talent.score, careerDemand, independentPositiveEvidence.size);
+      const alignment = alignmentLevel(level, demandCapability.capability, careerDemand);
       const userEvidence = (positiveEvidence.length
         ? positiveEvidence
         : responseEvidenceForTalent(talentId, responses, questions)).slice(0, 3);
@@ -137,16 +137,21 @@ function buildAbilityAlignmentsFromRequirements(
       const matchedTasks = rankedTasks.filter(({ hits }) => hits > 0).map(({ task }) => task);
       const relevantCareerTasks = [...new Set(matchedTasks.length ? matchedTasks : tasks)].slice(0, 2);
       const evidenceText = positiveEvidence[0]?.description ?? '目前的作答還沒有在足夠多種情境中形成一致訊號。';
-      const explanation = alignment === 'insufficient_evidence'
+      const explanation = alignment === 'unknown'
         ? `這份工作會在「${relevantCareerTasks[0]}」使用「${definition.nameZh}」；目前測驗還沒有足夠不同情境的回答，判斷它是不是你的穩定優勢。`
-        : alignment === 'low_overlap'
+        : alignment === 'significant_gap'
           ? `目前在不同情境裡，「${definition.nameZh}」較少成為你的自然反應；而這份工作會在「${relevantCareerTasks[0]}」經常使用它。這代表需要額外適應，不等於你做不到。`
-          : `${evidenceText} 這些作答形成「${definition.nameZh}」的${alignment === 'strong_alignment' ? '明確' : '部分'}訊號。這份工作會在「${relevantCareerTasks.join('」與「')}」使用它，因此這項能力${alignment === 'strong_alignment' ? '是推薦此方向的重要依據' : '對推薦提供部分支持'}。`;
+          : alignment === 'partial_gap'
+            ? `你目前在「${definition.nameZh}」已出現可用訊號，但還沒有完全達到這類工作在「${relevantCareerTasks[0]}」的常用程度；可用短任務確認實際差距。`
+            : `${evidenceText} 這些回答顯示你的「${definition.nameZh}」${alignment === 'exceeds_requirement' ? '高於' : '達到'}這類工作的主要需求，會用在「${relevantCareerTasks.join('」與「')}」。`;
       return [{
         talentId,
         talentName: definition.nameZh,
         userEvidence,
         userSignalLevel: level,
+        userAbilityScore: talent.score,
+        demandCapabilityScore: demandCapability.capability,
+        relativeTalentPercentile: demandCapability.relativePercentile,
         careerDemand,
         importance: importanceByTalent.get(talentId) ?? 'minor',
         relevantCareerTasks,
@@ -205,15 +210,16 @@ export function evaluatePositiveEvidenceGate(
   energyRisk: InterpretationRiskLevel,
   specificCareerSupportBreadth = 1,
 ): PositiveEvidenceGateResult {
-  const positive = alignments.filter(({ alignment }) => alignment === 'strong_alignment' || alignment === 'moderate_alignment');
+  const positive = alignments.filter(({ alignment }) => alignment === 'exceeds_requirement' || alignment === 'meets_requirement');
   const corePositive = positive.filter(({ importance }) => importance === 'core');
-  const strongAlignmentCount = alignments.filter(({ alignment }) => alignment === 'strong_alignment').length;
-  const moderateAlignmentCount = alignments.filter(({ alignment }) => alignment === 'moderate_alignment').length;
-  const lowOverlapCount = alignments.filter(({ alignment }) => alignment === 'low_overlap').length;
-  const insufficientEvidenceCount = alignments.filter(({ alignment }) => alignment === 'insufficient_evidence').length;
+  const strongAlignmentCount = alignments.filter(({ alignment }) => alignment === 'exceeds_requirement').length;
+  const moderateAlignmentCount = alignments.filter(({ alignment }) => alignment === 'meets_requirement').length;
+  const lowOverlapCount = alignments.filter(({ alignment }) => alignment === 'significant_gap').length;
+  const insufficientEvidenceCount = alignments.filter(({ alignment }) => alignment === 'unknown').length;
   const reasons: string[] = [];
-  if (positive.length < 2) reasons.push('核心能力中少於兩項具有直接正向作答證據。');
-  if (corePositive.length < 1) reasons.push('最高重要性的能力目前沒有直接正向支持。');
+  if (positive.length < 2) reasons.push('重要能力中少於兩項達到這類工作的需求。');
+  if (corePositive.length < 1) reasons.push('核心能力目前沒有一項達到工作需求。');
+  if (lowOverlapCount >= 2) reasons.push('有兩項以上重要能力仍有明顯需求差距。');
   if (confidence === 'low') reasons.push('目前分析信心不足以支持強烈推薦。');
   if (environmentFriction === 'high') reasons.push('存在重大的工作環境摩擦。');
   if (energyRisk === 'high') reasons.push('存在重大的能量消耗風險。');
@@ -291,10 +297,10 @@ function buildRecommendationReasons(
   environmentFriction: InterpretationRiskLevel,
 ) {
   const reasons = alignments
-    .filter(({ alignment }) => alignment === 'strong_alignment' || alignment === 'moderate_alignment')
+    .filter(({ alignment }) => alignment === 'exceeds_requirement' || alignment === 'meets_requirement')
     .sort((a, b) => (a.importance === 'core' ? -1 : 0) - (b.importance === 'core' ? -1 : 0) || b.careerDemand - a.careerDemand)
     .slice(0, 2)
-    .map(({ talentName, relevantCareerTasks }) => `你的「${talentName}」有直接作答支持，會用在「${relevantCareerTasks[0]}」。`);
+    .map(({ talentName, relevantCareerTasks, alignment }) => `你的「${talentName}」${alignment === 'exceeds_requirement' ? '高於' : '達到'}這類工作的需求，會用在「${relevantCareerTasks[0]}」。`);
   if (interestAlignment >= 0.55) reasons.push('你偏好的活動方向與這類工作的主要內容有明顯重疊。');
   if (workStyleAlignment >= 0.55) reasons.push('這類工作的日常做事方式接近你目前偏好的方式。');
   if (environmentFriction === 'low') reasons.push('主要工作環境要求大致落在你目前可接受的範圍。');
@@ -315,12 +321,12 @@ function buildLimitingReasons(
   else if (environmentFriction === 'moderate') reasons.push('部分工作環境要求與你的偏好有落差，需要查看實際職位。');
   if (energyRisk === 'high') reasons.push('這類工作會高頻使用目前顯示明顯能量消耗的能力；你可能做得到，但長期使用可能較累。');
   else if (energyRisk === 'moderate') reasons.push('其中一項常用能力可能帶來能量消耗，需要留意使用頻率。');
-  for (const item of alignments.filter(({ alignment, importance }) => alignment === 'low_overlap' && importance !== 'minor').slice(0, 2)) {
+  for (const item of alignments.filter(({ alignment, importance }) => alignment === 'significant_gap' && importance !== 'minor').slice(0, 2)) {
     reasons.push(`「${item.talentName}」有足夠作答機會但目前重疊較少，而它是這類工作的${item.importance === 'core' ? '核心' : '常用'}能力。`);
   }
   if (interestAlignment < 0.45) reasons.push('你目前表達的興趣與這類工作的主要活動重疊較少；這是興趣訊號，不是能力判斷。');
   if (workStyleAlignment < 0.45) reasons.push('這類工作的日常做事方式與你目前偏好的方式有較多差異。');
-  const unknown = alignments.filter(({ alignment }) => alignment === 'insufficient_evidence');
+  const unknown = alignments.filter(({ alignment }) => alignment === 'unknown');
   if (unknown.length && classification !== 'lower') reasons.push(`「${unknown.slice(0, 2).map(({ talentName }) => talentName).join('、')}」尚待更多不同情境的回答確認。`);
   if (classification === 'moderate' && !reasons.length) reasons.push(...evidenceGate.reasons.slice(0, 2));
   return reasons;
@@ -384,7 +390,7 @@ export function interpretPublicCareers({
         responses,
         questions,
       );
-      const positives = specificAlignments.filter(({ alignment }) => alignment === 'strong_alignment' || alignment === 'moderate_alignment');
+      const positives = specificAlignments.filter(({ alignment }) => alignment === 'exceeds_requirement' || alignment === 'meets_requirement');
       const specificGate = evaluatePositiveEvidenceGate(
         specificAlignments,
         specificMatch.confidence,
@@ -394,7 +400,7 @@ export function interpretPublicCareers({
       const specificIndex = sortedSpecificMatches.findIndex(({ careerId }) => careerId === profile.id);
       const specificEnvironmentFriction = riskFromEnvironment([specificMatch]);
       const specificEnergyRisk = riskFromEnergy([profile], talentProfile.baseTalents);
-      const specificCoreLowOverlap = specificAlignments.some(({ alignment, importance }) => alignment === 'low_overlap' && importance === 'core');
+      const specificCoreLowOverlap = specificAlignments.some(({ alignment, importance }) => alignment === 'significant_gap' && importance === 'core');
       const specificDecision = decideRecommendation({
         relativePercentile: sortedSpecificMatches.length <= 1 ? 1 : 1 - specificIndex / (sortedSpecificMatches.length - 1),
         fitSeparation: specificMatch.matchScore - specificMedian,
@@ -424,7 +430,7 @@ export function interpretPublicCareers({
       specificCareerSupportBreadth,
     );
     const preferenceMismatch = interestAlignment < 0.38 && workStyleAlignment < 0.5;
-    const coreLowOverlap = abilityAlignment.filter(({ alignment, importance }) => alignment === 'low_overlap' && importance === 'core').length;
+    const coreLowOverlap = abilityAlignment.filter(({ alignment, importance }) => alignment === 'significant_gap' && importance === 'core').length;
     const explicitMismatch = environmentFriction === 'high' || energyRisk === 'high' || coreLowOverlap >= 1 || preferenceMismatch;
     const decision = decideRecommendation({
       relativePercentile,
@@ -530,7 +536,7 @@ export function interpretSpecificCareer({
     energyRisk,
   );
   const preferenceMismatch = match.interestMatch < 0.38 && match.workStyleMatch < 0.5;
-  const coreLowOverlap = abilityAlignment.some(({ alignment, importance }) => alignment === 'low_overlap' && importance === 'core');
+  const coreLowOverlap = abilityAlignment.some(({ alignment, importance }) => alignment === 'significant_gap' && importance === 'core');
   const decision = decideRecommendation({
     relativePercentile,
     fitSeparation,

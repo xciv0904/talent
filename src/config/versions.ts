@@ -1,11 +1,11 @@
 export const PRODUCT_VERSIONS = {
   assessmentVersion: '1.0.1',
-  talentModelVersion: '1.0.0',
+  talentModelVersion: '2.0.0',
   careerDatasetVersion: '1.0.0',
-  matchingEngineVersion: '1.0.0',
-  explanationVersion: '1.1.0',
+  matchingEngineVersion: '2.1.0',
+  explanationVersion: '1.2.0',
   betaFeedbackSchemaVersion: 2,
-  storageSchemaVersion: 4,
+  storageSchemaVersion: 5,
 } as const;
 
 export interface ResultVersionInfo {

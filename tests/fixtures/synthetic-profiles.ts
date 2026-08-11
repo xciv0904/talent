@@ -97,6 +97,18 @@ const definitions: Array<Omit<SyntheticProfile, 'responses'>> = [
   { id: 'resilient_executor', targetTalents: ['persistence', 'adaptability', 'planning', 'initiative'] },
   { id: 'systems_coordinator', targetTalents: ['coordination', 'structuring_ambiguity', 'pattern_recognition', 'planning'] },
   { id: 'analytical_communicator', targetTalents: ['analytical_reasoning', 'communication', 'verbal_reasoning', 'pattern_recognition'] },
+  { id: 'service_operator', targetTalents: ['emotional_perception', 'coordination', 'adaptability', 'persistence'] },
+  { id: 'technical_diagnostician', targetTalents: ['spatial_mechanical', 'analytical_reasoning', 'precision', 'learning_agility'] },
+  { id: 'research_synthesizer', targetTalents: ['pattern_recognition', 'verbal_reasoning', 'structuring_ambiguity', 'precision'] },
+  { id: 'community_facilitator', targetTalents: ['communication', 'conflict_navigation', 'coordination', 'initiative'] },
+  { id: 'creative_planner', targetTalents: ['creative_ideation', 'planning', 'prioritization', 'verbal_reasoning'] },
+  { id: 'practical_teacher', targetTalents: ['teaching_coaching', 'spatial_mechanical', 'communication', 'persistence'] },
+  { id: 'adaptive_influencer', targetTalents: ['adaptability', 'influence', 'initiative', 'emotional_perception'] },
+  { id: 'quality_coordinator', targetTalents: ['precision', 'coordination', 'planning', 'conflict_navigation'] },
+  { id: 'data_storyteller', targetTalents: ['quantitative_reasoning', 'pattern_recognition', 'verbal_reasoning', 'influence'] },
+  { id: 'ambiguity_coach', targetTalents: ['structuring_ambiguity', 'teaching_coaching', 'emotional_perception', 'learning_agility'] },
+  { id: 'resilient_maker', targetTalents: ['spatial_mechanical', 'initiative', 'adaptability', 'persistence'] },
+  { id: 'careful_explorer', targetTalents: ['learning_agility', 'analytical_reasoning', 'creative_ideation', 'precision'] },
 ];
 
 export const SYNTHETIC_PROFILES: SyntheticProfile[] = definitions.map((definition, index) => ({

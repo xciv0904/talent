@@ -47,7 +47,20 @@ export interface TalentScore {
   interestScore: number | null;
   status: TalentStatus;
   confidence: ConfidenceResult;
+  measurement: TalentMeasurementSummary;
   evidence: Evidence[];
+}
+
+export interface TalentMeasurementSummary {
+  talentId: TalentId;
+  opportunities: number;
+  answeredOpportunities: number;
+  validResponses: number;
+  positiveSignals: number;
+  negativeOrCompetingSignals: number;
+  crossContextConsistency: number;
+  normalizedScore: number;
+  confidence: ConfidenceLevel;
 }
 
 export interface CompositeTalentScore {
@@ -85,6 +98,7 @@ export type TalentStatus =
   | 'emerging_potential'
   | 'interest_only'
   | 'energy_drain'
+  | 'observed_not_prominent'
   | 'insufficient_evidence';
 
 export interface ConfidenceResult {

@@ -46,6 +46,6 @@ describe('energy separation', () => {
       ...base,
       talentScores: base.talentScores.map((talent) => talent.talentId === 'communication' ? draining : talent),
     });
-    expect(withDrain.talentMatch).toBeLessThan(withEnergy.talentMatch);
+    expect(withDrain.talentMatch).toBe(withEnergy.talentMatch);
   });
 });

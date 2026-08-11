@@ -32,6 +32,9 @@ export interface ProfileOpportunity {
 
 export interface AssessmentResult {
   observations: SignalObservation[];
+  /** All opportunities present in the administered question set, answered or not. */
+  talentMeasurementOpportunities: TalentOpportunity[];
+  /** Opportunities for questions that received a valid response. */
   talentOpportunities: TalentOpportunity[];
   profileOpportunities: ProfileOpportunity[];
   answeredQuestionIds: string[];

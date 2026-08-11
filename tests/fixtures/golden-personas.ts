@@ -37,6 +37,17 @@ const talentScores = (highTalents: readonly TalentId[]): TalentScore[] => {
       evidenceQuality: 0.8,
       reasons: [],
     },
+    measurement: {
+      talentId: id,
+      opportunities: 4,
+      answeredOpportunities: 4,
+      validResponses: 4,
+      positiveSignals: high.has(id) ? 4 : 1,
+      negativeOrCompetingSignals: high.has(id) ? 0 : 3,
+      crossContextConsistency: high.has(id) ? 0.9 : 0.75,
+      normalizedScore: high.has(id) ? 0.92 : 0.28,
+      confidence: high.has(id) ? 'high' : 'medium',
+    },
     evidence: high.has(id)
       ? [{ id: `evidence_${id}`, source: 'behavior_example', talentId: id, description: 'Golden persona evidence', strength: 0.9 }]
       : [],

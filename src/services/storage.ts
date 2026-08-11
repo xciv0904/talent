@@ -1,4 +1,5 @@
 import { CURRENT_RESULT_VERSIONS, PRODUCT_VERSIONS, type ResultVersionInfo } from '../config/versions';
+import { runCareerDiscoveryPipeline } from '../engine/integration-engine';
 import {
   CAREER_FEEDBACK_OPTIONS,
   NEXT_STEP_CLARITY_OPTIONS,
@@ -181,7 +182,8 @@ export function parseStoredState(raw: string | null): AppStorageState {
     const parsed = JSON.parse(raw) as Partial<AppStorageState>;
     const isLegacyV2 = parsed.schemaVersion === 2;
     const isPreviousV3 = parsed.schemaVersion === 3;
-    if (parsed.schemaVersion !== SCHEMA_VERSION && !isLegacyV2 && !isPreviousV3) return createInitialAppState();
+    const isPreviousV4 = parsed.schemaVersion === 4;
+    if (parsed.schemaVersion !== SCHEMA_VERSION && !isLegacyV2 && !isPreviousV3 && !isPreviousV4) return createInitialAppState();
     const sessionId = isString(parsed.sessionId) && parsed.sessionId.startsWith('beta_') ? parsed.sessionId : createAnonymousSessionId();
     const progress = parsed.assessmentProgress;
     const assessmentProgress: AssessmentProgress = {
@@ -206,11 +208,24 @@ export function parseStoredState(raw: string | null): AppStorageState {
           (record.currentStep === undefined || (typeof record.currentStep === 'number' && Number.isFinite(record.currentStep) && record.currentStep >= 0 && record.currentStep <= 4)),
         ))
       : [];
-    const talentProfile = !isLegacyV2 && parsed.talentProfile && Array.isArray(parsed.talentProfile.baseTalents) &&
+    let talentProfile = !isLegacyV2 && parsed.talentProfile && Array.isArray(parsed.talentProfile.baseTalents) &&
       Array.isArray(parsed.talentProfile.compositeTalents) ? parsed.talentProfile : null;
-    const careerResults = !isLegacyV2 && parsed.careerResults && Array.isArray(parsed.careerResults.matches) &&
+    let careerResults = !isLegacyV2 && parsed.careerResults && Array.isArray(parsed.careerResults.matches) &&
       parsed.careerResults.categories && Object.values(parsed.careerResults.categories).every(Array.isArray) &&
       parsed.careerResults.profiles && isResultVersionInfo(parsed.careerResults.versions) ? parsed.careerResults : null;
+    const measurementIsCurrent = talentProfile?.baseTalents.every((talent) => Boolean(talent.measurement));
+    const engineIsCurrent = careerResults?.versions.talentModelVersion === CURRENT_RESULT_VERSIONS.talentModelVersion
+      && careerResults.versions.matchingEngineVersion === CURRENT_RESULT_VERSIONS.matchingEngineVersion;
+    if (assessmentProgress.completed && answers.length > 0 && careerResults !== null && (!measurementIsCurrent || !engineIsCurrent)) {
+      const recalculated = runCareerDiscoveryPipeline(answers, { education: 'none' });
+      talentProfile = recalculated.talentProfile;
+      careerResults = {
+        matches: recalculated.matches,
+        categories: recalculated.categories,
+        profiles: recalculated.profiles,
+        versions: CURRENT_RESULT_VERSIONS,
+      };
+    }
     return {
       schemaVersion: SCHEMA_VERSION,
       sessionId,

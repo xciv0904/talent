@@ -13,7 +13,7 @@ import {
   type PrioritizedCareerDirection,
 } from '../types';
 
-export const SCORE_PROXIMITY_EPSILON = 0.017;
+export const SCORE_PROXIMITY_EPSILON = 0.021;
 
 const distanceRank: Record<EntryDistanceLevel, number> = { low: 0, medium: 1, high: 2, very_high: 3 };
 const confidenceRank = { low: 0, medium: 1, high: 2 } as const;

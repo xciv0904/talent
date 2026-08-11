@@ -12,7 +12,7 @@ import {
   type TalentId,
 } from '../types';
 import { calculateEntryDistance } from './entry-distance-engine';
-import { clamp } from './talent-engine';
+import { careerDemandCapabilityScore, clamp } from './talent-engine';
 
 export const CAREER_MATCH_WEIGHTS = {
   talent: 0.35,
@@ -79,18 +79,18 @@ export function calculateEnvironmentMatch(
 }
 
 const talentMatch = (career: CareerProfile, user: CareerMatchInput) => {
-  const scoreByTalent = new Map(user.talentScores.map((item) => [item.talentId, item.score]));
+  const scoreByTalent = new Map(user.talentScores.map((item) => [
+    item.talentId,
+    careerDemandCapabilityScore(user.talentScores, item.talentId).capability,
+  ]));
   const requirements = Object.entries(career.talentRequirements) as Array<[TalentId, number]>;
   const weight = requirements.reduce((sum, [, required]) => sum + required, 0);
   if (weight === 0) return 0;
   return requirements.reduce(
     (sum, [talentId, required]) => {
-      const talent = user.talentScores.find((item) => item.talentId === talentId);
-      const confidenceFactor = talent?.confidence.level === 'high' ? 1 : talent?.confidence.level === 'medium' ? 0.7 : 0.35;
-      const energyFactor = talent?.energyScore === null || talent?.energyScore === undefined
-        ? 0.85
-        : clamp(0.75 + talent.energyScore * 0.25, 0.5, 1);
-      return sum + Math.min(1, ((scoreByTalent.get(talentId) ?? 0) * confidenceFactor * energyFactor) / required) * required;
+      // Ability demand fit is based on measured capability only. Confidence and
+      // energy remain separate metadata/risk channels and must not lower ability.
+      return sum + Math.min(1, (scoreByTalent.get(talentId) ?? 0) / required) * required;
     },
     0,
   ) / weight;
@@ -136,9 +136,10 @@ export function matchCareer(career: CareerProfile, user: CareerMatchInput): Care
       talentId,
       required,
       user: user.talentScores.find((item) => item.talentId === talentId),
+      capability: careerDemandCapabilityScore(user.talentScores, talentId).capability,
     }))
-    .filter((item) => item.user && item.user.score >= 0.55 && item.user.confidence.level !== 'low')
-    .sort((a, b) => b.required * b.user!.score - a.required * a.user!.score)
+    .filter((item) => item.user && item.capability >= item.required * 0.8 && item.user.confidence.questionCoverage >= 0.5)
+    .sort((a, b) => b.required * b.capability - a.required * a.capability)
     .slice(0, 3)
     .map((item, index) => {
       const talentName = talentDefinitionById.get(item.talentId)?.nameZh ?? item.talentId;

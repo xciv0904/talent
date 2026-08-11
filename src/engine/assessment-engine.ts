@@ -119,6 +119,7 @@ export function runAssessment(
   }
 
   const observations: SignalObservation[] = [];
+  const talentMeasurementOpportunities = questions.flatMap(collectOpportunities);
   const talentOpportunities: TalentOpportunity[] = [];
   const profileOpportunities: ProfileOpportunity[] = [];
   const answeredQuestionIds: string[] = [];
@@ -229,5 +230,11 @@ export function runAssessment(
     profileOpportunities.push(...collectProfileOpportunities(question));
   }
 
-  return { observations, talentOpportunities, profileOpportunities, answeredQuestionIds };
+  return {
+    observations,
+    talentMeasurementOpportunities,
+    talentOpportunities,
+    profileOpportunities,
+    answeredQuestionIds,
+  };
 }

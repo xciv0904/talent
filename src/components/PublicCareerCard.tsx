@@ -4,15 +4,16 @@ import type { AbilityAlignment, PublicCareerInterpretation } from '../types';
 const riskLabel = { low: '低', moderate: '需要留意', high: '明顯' } as const;
 const confidenceLabel = { low: '低', medium: '中', high: '高' } as const;
 const alignmentLabel = {
-  strong_alignment: '明顯吻合',
-  moderate_alignment: '部分吻合',
-  low_overlap: '目前重疊較少',
-  insufficient_evidence: '尚待確認',
+  exceeds_requirement: '高於需求',
+  meets_requirement: '達到需求',
+  partial_gap: '部分差距',
+  significant_gap: '明顯差距',
+  unknown: '尚待確認',
 } as const;
 const recommendationLabel = {
   strong_recommendation: '非常適合',
   moderate_recommendation: '有條件適合',
-  exploratory: '需要更多證據',
+  exploratory: '值得先探索',
   not_priority: '目前較不吻合',
 } as const;
 const sourceLabel = {
@@ -42,7 +43,7 @@ function EvidenceAlignment({ item, index }: { item: AbilityAlignment; index: num
 export function PublicCareerCard({ result }: { result: PublicCareerInterpretation }) {
   const isStrong = result.classification === 'strong';
   const isModerate = result.classification === 'moderate';
-  const aligned = result.abilityAlignment.filter(({ alignment }) => alignment === 'strong_alignment' || alignment === 'moderate_alignment');
+  const aligned = result.abilityAlignment.filter(({ alignment }) => alignment === 'exceeds_requirement' || alignment === 'meets_requirement');
   const shownAbilities = isStrong ? aligned.slice(0, 3) : isModerate ? aligned.slice(0, 2) : [];
 
   return <article className={`rounded-[2rem] border bg-white p-6 sm:p-8 ${isStrong ? 'border-blue-200 shadow-sm' : 'border-slate-200'}`}>
@@ -52,7 +53,7 @@ export function PublicCareerCard({ result }: { result: PublicCareerInterpretatio
         <h3 className="mt-2 text-2xl font-semibold sm:text-3xl">{result.title}</h3>
         <p className="mt-3 max-w-2xl leading-7 text-slate-600">{result.description}</p>
       </div>
-      <div className="flex flex-col items-end gap-2"><span className="rounded-full bg-blue-100 px-4 py-2 text-xs font-bold text-slate-800">{recommendationLabel[result.recommendationStrength]}</span><span className="text-xs font-bold text-slate-500">分析信心：{confidenceLabel[result.confidence]}</span></div>
+      <div className="flex flex-col items-end gap-2"><span className="rounded-full bg-blue-100 px-4 py-2 text-xs font-bold text-slate-800">{recommendationLabel[result.recommendationStrength]}</span></div>
     </div>
 
     <div className="mt-5">
@@ -66,7 +67,7 @@ export function PublicCareerCard({ result }: { result: PublicCareerInterpretatio
       <h4 className="text-lg font-semibold">{isStrong ? '你的能力如何用在這類工作' : '符合你的地方'}</h4>
       {shownAbilities.length > 0
         ? <div className="mt-4 grid gap-3">{shownAbilities.map((item, index) => <EvidenceAlignment key={item.talentId} item={item} index={index} />)}</div>
-        : <div className="mt-3"><p className="text-sm leading-6 text-slate-600">目前沒有足夠的直接能力證據把這個方向稱為高度適合；以下是它仍出現在結果中的實際原因。</p>{result.matchingReasons.length > 0 && <ul className="mt-3 space-y-2 text-sm leading-6 text-slate-700">{result.matchingReasons.slice(0, 3).map((reason) => <li key={reason}>• {reason}</li>)}</ul>}</div>}
+        : <div className="mt-3"><p className="text-sm leading-6 text-slate-600">這個方向目前主要由興趣、工作方式或相對位置支持；能力需求仍有差距，因此適合先了解實際工作再決定。</p>{result.matchingReasons.length > 0 && <ul className="mt-3 space-y-2 text-sm leading-6 text-slate-700">{result.matchingReasons.slice(0, 3).map((reason) => <li key={reason}>• {reason}</li>)}</ul>}</div>}
     </div>}
 
     {isStrong && <div className="mt-7">
@@ -108,6 +109,7 @@ export function PublicCareerCard({ result }: { result: PublicCareerInterpretatio
         </div>
       </details>}
     </div>
+    <details className="mt-5 text-xs text-slate-500"><summary className="cursor-pointer font-semibold">查看測量資訊</summary><p className="mt-2">分析信心：{confidenceLabel[result.confidence]}。信心描述測量完整度與一致性，不是適合程度。</p></details>
   </article>;
 }
 

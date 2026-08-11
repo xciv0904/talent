@@ -9,7 +9,7 @@ import { buildCareerExperiencePlan, buildEntryPath, dimensionLabels, formatFitIn
 const recommendationLabel: Record<RecommendationStrength, string> = {
   strong_recommendation: '非常適合',
   moderate_recommendation: '有條件適合',
-  exploratory: '需要更多證據',
+  exploratory: '值得先探索',
   not_priority: '目前較不吻合',
 };
 
@@ -22,10 +22,11 @@ const sourceSummary: Record<RecommendationSource, string> = {
 };
 
 const alignmentLabel = {
-  strong_alignment: '明顯吻合',
-  moderate_alignment: '部分吻合',
-  low_overlap: '目前重疊較少',
-  insufficient_evidence: '尚待確認',
+  exceeds_requirement: '高於需求',
+  meets_requirement: '達到需求',
+  partial_gap: '部分差距',
+  significant_gap: '明顯差距',
+  unknown: '尚待確認',
 } as const;
 
 export function CareerDetailPage() {
@@ -48,15 +49,15 @@ export function CareerDetailPage() {
 
   const entryPath = buildEntryPath(career, match, state.talentProfile?.baseTalents);
   const experience = buildCareerExperiencePlan(career);
-  const positiveAbilities = interpretation?.abilityAlignment.filter(({ alignment }) => alignment === 'strong_alignment' || alignment === 'moderate_alignment') ?? [];
-  const needsConfirmation = interpretation?.abilityAlignment.filter(({ alignment }) => alignment === 'insufficient_evidence') ?? [];
-  const lowOverlap = interpretation?.abilityAlignment.filter(({ alignment }) => alignment === 'low_overlap') ?? [];
+  const positiveAbilities = interpretation?.abilityAlignment.filter(({ alignment }) => alignment === 'exceeds_requirement' || alignment === 'meets_requirement') ?? [];
+  const needsConfirmation = interpretation?.abilityAlignment.filter(({ alignment }) => alignment === 'unknown') ?? [];
+  const lowOverlap = interpretation?.abilityAlignment.filter(({ alignment }) => alignment === 'significant_gap') ?? [];
   const saveExperience = () => saveExperiment({ careerId: career.id, status: record?.status ?? 'saved', currentStep: record?.currentStep ?? 0, updatedAt: new Date().toISOString() });
 
   return <main>
     <header className="bg-slate-950 text-white"><div className="mx-auto max-w-7xl px-5 py-14 sm:py-20">
       <Link to="/careers" className="text-sm text-slate-400">← 你的職涯方向</Link>
-      <div className="mt-8"><p className="text-sm font-bold tracking-widest text-blue-200 uppercase">{interpretation?.publicCareerTitle ?? career.family.replaceAll('_', ' ')}</p><h1 className="mt-3 text-5xl font-semibold sm:text-7xl">{career.titleZh}</h1><p className="mt-2 text-xl text-slate-400">{career.titleEn}</p><p className="mt-6 max-w-3xl text-lg leading-8 text-slate-300">{career.description}</p>{interpretation && <div className="mt-6 flex flex-wrap items-center gap-3"><span className="rounded-full bg-blue-100 px-4 py-2 text-sm font-bold text-slate-950">{recommendationLabel[interpretation.recommendationStrength]}</span><span className="text-sm text-slate-400">分析信心：{interpretation.confidence === 'high' ? '高' : interpretation.confidence === 'medium' ? '中' : '低'}</span></div>}</div>
+      <div className="mt-8"><p className="text-sm font-bold tracking-widest text-blue-200 uppercase">{interpretation?.publicCareerTitle ?? career.family.replaceAll('_', ' ')}</p><h1 className="mt-3 text-5xl font-semibold sm:text-7xl">{career.titleZh}</h1><p className="mt-2 text-xl text-slate-400">{career.titleEn}</p><p className="mt-6 max-w-3xl text-lg leading-8 text-slate-300">{career.description}</p>{interpretation && <div className="mt-6 flex flex-wrap items-center gap-3"><span className="rounded-full bg-blue-100 px-4 py-2 text-sm font-bold text-slate-950">{recommendationLabel[interpretation.recommendationStrength]}</span></div>}</div>
     </div></header>
 
     <div className="mx-auto max-w-7xl space-y-16 px-5 py-14">

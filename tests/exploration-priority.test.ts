@@ -105,8 +105,8 @@ describe('Exploration Priority and close-score regression', () => {
     }).sort((a, b) => a - b);
     const middle = gaps.length / 2;
     const median = (gaps[middle - 1] + gaps[middle]) / 2;
-    expect(median).toBeGreaterThanOrEqual(0.014);
-    expect(median).toBeLessThanOrEqual(0.019);
-    expect(SCORE_PROXIMITY_EPSILON).toBe(0.017);
+    expect(median).toBeGreaterThanOrEqual(0.019);
+    expect(median).toBeLessThanOrEqual(0.024);
+    expect(SCORE_PROXIMITY_EPSILON).toBe(0.021);
   });
 });

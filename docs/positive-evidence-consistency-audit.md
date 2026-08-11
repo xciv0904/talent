@@ -1,5 +1,7 @@
 # Positive Evidence Gate and Career Taxonomy Audit
 
+> Historical release audit. Its positive-evidence gate and legacy alignment labels were replaced by the coverage-separated demand-fit model in `docs/measurement-model.md`.
+
 Audit date: 2026-08-10
 
 ## Root cause

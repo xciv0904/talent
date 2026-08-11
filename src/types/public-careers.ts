@@ -2,7 +2,12 @@ import type { CareerMatchResult } from './profiles';
 import type { ConfidenceLevel, Evidence, TalentId } from './talents';
 
 export type PublicCareerFitLevel = 'strong' | 'moderate' | 'lower';
-export type AbilityAlignmentLevel = 'strong_alignment' | 'moderate_alignment' | 'low_overlap' | 'insufficient_evidence';
+export type AbilityAlignmentLevel =
+  | 'exceeds_requirement'
+  | 'meets_requirement'
+  | 'partial_gap'
+  | 'significant_gap'
+  | 'unknown';
 export type UserSignalLevel = 'high' | 'moderate' | 'low' | 'insufficient_evidence';
 export type InterpretationRiskLevel = 'low' | 'moderate' | 'high';
 export type TalentRequirementImportance = 'core' | 'supporting' | 'minor';
@@ -24,6 +29,9 @@ export interface AbilityAlignment {
   talentName: string;
   userEvidence: Evidence[];
   userSignalLevel: UserSignalLevel;
+  userAbilityScore: number;
+  demandCapabilityScore: number;
+  relativeTalentPercentile: number;
   careerDemand: number;
   importance: TalentRequirementImportance;
   relevantCareerTasks: string[];

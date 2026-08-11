@@ -32,10 +32,10 @@ export function calculateConfidence(input: ConfidenceInput): ConfidenceResult {
   let level: ConfidenceResult['level'] = 'low';
 
   if (
-    input.questionCoverage >= 1 &&
+    input.questionCoverage >= 0.75 &&
     hasCrossMethodEvidence &&
-    input.crossMethodConsistency >= 0.7 &&
-    input.evidenceQuality >= 0.7
+    input.crossMethodConsistency >= 0.65 &&
+    input.evidenceQuality >= 0.65
   ) {
     level = 'high';
     reasons.push('題目覆蓋完整，跨方法結果一致，且證據品質足夠。');
@@ -43,7 +43,7 @@ export function calculateConfidence(input: ConfidenceInput): ConfidenceResult {
     input.questionCoverage >= 0.5 &&
     hasCrossMethodEvidence &&
     input.crossMethodConsistency >= 0.45 &&
-    input.evidenceQuality >= 0.55
+    input.evidenceQuality >= 0.5
   ) {
     level = 'medium';
     reasons.push('已有多種方法支持，但仍需要更多或更一致的證據。');
@@ -78,29 +78,28 @@ export function determineTalentStatus(
   if (abilityScore >= 0.35 || (interestScore !== null && interestScore >= 0.35)) {
     return 'emerging_potential';
   }
-  return 'insufficient_evidence';
+  return 'observed_not_prominent';
 }
 
 const average = (values: number[]): number | null =>
   values.length === 0 ? null : values.reduce((sum, value) => sum + value, 0) / values.length;
 
-const methodConsistency = (
+const responseConsistency = (
   opportunities: AssessmentResult['talentOpportunities'],
   supportByQuestion: Map<string, number>,
 ): { consistency: number; methodCount: number } => {
-  const methods = new Map<QuestionType, { support: number; opportunity: number }>();
+  const methods = new Map<QuestionType, number[]>();
   for (const opportunity of opportunities) {
-    const current = methods.get(opportunity.questionType) ?? { support: 0, opportunity: 0 };
-    current.support += supportByQuestion.get(opportunity.questionId) ?? 0;
-    current.opportunity += opportunity.maximumSignal;
-    methods.set(opportunity.questionType, current);
+    const direction = (supportByQuestion.get(opportunity.questionId) ?? 0) > 0 ? 1 : 0;
+    methods.set(opportunity.questionType, [...(methods.get(opportunity.questionType) ?? []), direction]);
   }
-  const methodScores = [...methods.values()].map(({ support, opportunity }) =>
-    normalizeTalentScore(support, opportunity),
-  );
+  const methodScores = [...methods.values()].map((values) => average(values) ?? 0);
   if (methodScores.length < 2) return { consistency: 0, methodCount: methodScores.length };
+  const positiveRate = average(methodScores) ?? 0;
   return {
-    consistency: 1 - (Math.max(...methodScores) - Math.min(...methodScores)),
+    // Agreement is directional, not a reward for a high score. Consistently not
+    // selecting a talent is still a clear measurement result.
+    consistency: Math.max(positiveRate, 1 - positiveRate),
     methodCount: methodScores.length,
   };
 };
@@ -111,6 +110,9 @@ export function scoreBaseTalents(
 ): TalentScore[] {
   return BASE_TALENTS.map(({ id: talentId }) => {
     const opportunities = assessment.talentOpportunities.filter(
+      (opportunity) => opportunity.talentId === talentId,
+    );
+    const designedOpportunities = assessment.talentMeasurementOpportunities.filter(
       (opportunity) => opportunity.talentId === talentId,
     );
     const abilityObservations = assessment.observations.filter(
@@ -142,16 +144,20 @@ export function scoreBaseTalents(
       ...assessmentEvidence,
       ...externalEvidence.filter((item) => item.talentId === talentId),
     ];
-    const evidenceQualityValues = [
-      ...opportunities.map((item) => item.evidenceQuality),
-      ...relevantEvidence.map((item) => clamp(item.strength)),
-    ];
-    const { consistency, methodCount } = methodConsistency(opportunities, supportByQuestion);
+    const evidenceQualityValues = opportunities.map((item) => item.evidenceQuality);
+    const { consistency, methodCount } = responseConsistency(opportunities, supportByQuestion);
+    const positiveSignals = opportunities.filter(
+      ({ questionId }) => (supportByQuestion.get(questionId) ?? 0) > 0,
+    ).length;
+    const answeredOpportunities = opportunities.length;
+    const measurementCoverage = designedOpportunities.length > 0
+      ? answeredOpportunities / designedOpportunities.length
+      : 0;
     const confidence = calculateConfidence({
-      questionCoverage: opportunities.length / REQUIRED_QUESTION_COVERAGE,
+      questionCoverage: measurementCoverage,
       crossMethodConsistency: consistency,
       evidenceQuality: average(evidenceQualityValues) ?? 0,
-      evidenceCount: opportunities.length + relevantEvidence.length,
+      evidenceCount: answeredOpportunities,
       methodCount,
     });
 
@@ -171,6 +177,17 @@ export function scoreBaseTalents(
       interestScore,
       status: determineTalentStatus(score, energyScore, interestScore, confidence),
       confidence,
+      measurement: {
+        talentId,
+        opportunities: designedOpportunities.length,
+        answeredOpportunities,
+        validResponses: answeredOpportunities,
+        positiveSignals,
+        negativeOrCompetingSignals: Math.max(0, answeredOpportunities - positiveSignals),
+        crossContextConsistency: consistency,
+        normalizedScore: score,
+        confidence: confidence.level,
+      },
       evidence: [...relevantEvidence],
     };
   });
@@ -178,3 +195,20 @@ export function scoreBaseTalents(
 
 export const talentScoreById = (scores: readonly TalentScore[], talentId: TalentId) =>
   scores.find((score) => score.talentId === talentId);
+
+export function careerDemandCapabilityScore(
+  scores: readonly TalentScore[],
+  talentId: TalentId,
+): { capability: number; relativePercentile: number } {
+  const target = talentScoreById(scores, talentId);
+  if (!target || scores.length < 2) return { capability: target?.score ?? 0, relativePercentile: 0 };
+  const below = scores.filter((item) => item.score < target.score).length;
+  const relativePercentile = below / (scores.length - 1);
+  // Four-way forced choices make 0.25 an ordinary observed signal, while career
+  // demand vectors describe relative importance. Preserve the absolute score,
+  // but restore within-person rank for demand comparison only.
+  return {
+    capability: clamp(target.score * 0.4 + relativePercentile * 0.6),
+    relativePercentile,
+  };
+}
