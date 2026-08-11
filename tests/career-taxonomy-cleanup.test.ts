@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { buildPrimaryCareerPresentation, interpretPublicCareers, runCareerDiscoveryPipeline } from '../src/engine';
+import { CAREER_PROFILES } from '../src/data/careers';
 import { CareerDetailPage } from '../src/pages/CareerDetailPage';
 import { CareersPage } from '../src/pages/CareersPage';
 import { ComparePage } from '../src/pages/ComparePage';
 import type { PublicCareerResults } from '../src/types';
+import { skillNameLabel } from '../src/utils';
 import { SYNTHETIC_PROFILES } from './fixtures/synthetic-profiles';
 
 const source = String(CareersPage);
@@ -50,9 +52,20 @@ describe('career results taxonomy cleanup', () => {
   });
 
   it('Case E: missing background data does not produce a strong easier-transition conclusion', () => {
-    expect(compareSource).toContain('背景資料不足');
-    expect(detailSource).toContain('尚待補充目前背景');
-    expect(detailSource).toContain('不會把預設缺資料解讀成');
+    expect(compareSource).toContain('職業通常門檻');
+    expect(compareSource).toContain('個人 Entry Distance');
+    expect(compareSource).toContain('尚未估算');
+    expect(detailSource).toContain('不代表你的個人條件不足');
+    expect(detailSource).toContain('不會影響 Career Fit');
+    expect(compareSource).not.toContain('背景資料不足');
+    expect(detailSource).not.toContain('尚待補充目前背景');
+  });
+
+  it('localizes every career skill used in Chinese result copy', () => {
+    const skills = CAREER_PROFILES.flatMap((career) => career.skills);
+    const missingLabels = skills.filter((skill) => skillNameLabel(skill.name) === skill.name);
+    expect(missingLabels).toEqual([]);
+    expect(skillNameLabel('Instructional content')).toBe('教學內容設計');
   });
 
   it('removes legacy public tabs while retaining only internal category data', () => {

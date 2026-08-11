@@ -11,6 +11,7 @@ import {
   type EnvironmentDimension,
   type TalentId,
 } from '../types';
+import { skillNameLabel } from '../utils/career-presentation';
 import { calculateEntryDistance } from './entry-distance-engine';
 import { careerDemandCapabilityScore, clamp } from './talent-engine';
 
@@ -169,7 +170,7 @@ export function matchCareer(career: CareerProfile, user: CareerMatchInput): Care
   const missingSkills = career.skills
     .filter((skill) => (user.transferableSkills[skill.id] ?? 0) < 0.4)
     .slice(0, 2)
-    .map((skill) => `需要補強 ${skill.name}。`);
+    .map((skill) => `需要補強「${skillNameLabel(skill.name)}」。`);
   potentialFrictions.push(...missingSkills);
   potentialFrictions.push(
     ...user.talentScores

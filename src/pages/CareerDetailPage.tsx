@@ -4,7 +4,7 @@ import { CAREER_PROFILES } from '../data/careers';
 import { interpretSpecificCareer } from '../engine';
 import { markCareerExplored, saveExperiment, useAppState } from '../services';
 import type { AbilityAlignment, RecommendationSource, RecommendationStrength } from '../types';
-import { buildCareerExperiencePlan, buildEntryPath, dimensionLabels, formatFitIndex, formatScore } from '../utils';
+import { buildCareerExperiencePlan, careerEntryBarrierLabel, careerRequirementItems, dimensionLabels, formatFitIndex, formatScore, skillNameLabel } from '../utils';
 
 const recommendationLabel: Record<RecommendationStrength, string> = {
   strong_recommendation: '非常適合',
@@ -33,7 +33,6 @@ export function CareerDetailPage() {
   const { careerId } = useParams();
   const state = useAppState();
   const career = CAREER_PROFILES.find((item) => item.id === careerId);
-  const match = state.careerResults?.matches.find((item) => item.careerId === careerId);
   const record = state.experiments.find((item) => item.careerId === careerId);
   const interpretation = useMemo(() => state.talentProfile && state.careerResults && careerId
     ? interpretSpecificCareer({
@@ -47,7 +46,6 @@ export function CareerDetailPage() {
   useEffect(() => { if (career) markCareerExplored(career.id); }, [career]);
   if (!career) return <main className="mx-auto max-w-2xl px-5 py-24"><h1 className="text-4xl font-semibold">找不到這份工作</h1><Link to="/careers" className="mt-5 inline-block underline">回到職涯列表</Link></main>;
 
-  const entryPath = buildEntryPath(career, match, state.talentProfile?.baseTalents);
   const experience = buildCareerExperiencePlan(career);
   const positiveAbilities = interpretation?.abilityAlignment.filter(({ alignment }) => alignment === 'exceeds_requirement' || alignment === 'meets_requirement') ?? [];
   const needsConfirmation = interpretation?.abilityAlignment.filter(({ alignment }) => alignment === 'unknown') ?? [];
@@ -80,9 +78,9 @@ export function CareerDetailPage() {
 
       <section className="grid gap-6 lg:grid-cols-3"><Info title="工作環境">{Object.entries(career.environmentProfile).map(([key, value]) => <div key={key} className="mb-3"><div className="flex justify-between text-sm"><span>{dimensionLabels[key] ?? key}</span><span>{formatScore(value)}</span></div><div className="mt-1 h-2 rounded-full bg-slate-100"><div className="h-full rounded-full bg-slate-800" style={{ width: `${value * 100}%` }} /></div></div>)}</Info><Info title="可能喜歡"><ul className="space-y-2">{interpretation?.matchingReasons.length ? interpretation.matchingReasons.map((item) => <li key={item}>+ {item}</li>) : <li>目前沒有足夠個人化支持理由。</li>}</ul></Info><Info title="可能消耗"><ul className="space-y-2 text-slate-700">{interpretation?.limitingReasons.length ? interpretation.limitingReasons.map((item) => <li key={item}>– {item}</li>) : <li>目前沒有明顯摩擦訊號。</li>}</ul></Info></section>
 
-      <section className="grid gap-6 md:grid-cols-2"><Info title="常見職稱／相關方向"><p>{[career.titleZh, ...career.aliases].join('、')}</p>{interpretation && <Link to="/careers" className="mt-4 inline-block font-semibold underline">回到「{interpretation.publicCareerTitle}」方向</Link>}</Info><Info title="需要哪些技能"><ul className="space-y-3">{[...career.skills].sort((a, b) => b.importance - a.importance).map((skill) => <li key={skill.id} className="flex justify-between gap-4"><span>{skill.name}</span><span className="text-slate-400">{formatScore(skill.importance)}</span></li>)}</ul></Info></section>
+      <section className="grid gap-6 md:grid-cols-2"><Info title="常見職稱／相關方向"><p>{[career.titleZh, ...career.aliases].join('、')}</p>{interpretation && <Link to="/careers" className="mt-4 inline-block font-semibold underline">回到「{interpretation.publicCareerTitle}」方向</Link>}</Info><Info title="需要哪些技能"><ul className="space-y-3">{[...career.skills].sort((a, b) => b.importance - a.importance).map((skill) => <li key={skill.id} className="flex justify-between gap-4"><span>{skillNameLabel(skill.name)}</span><span className="text-slate-400">{formatScore(skill.importance)}</span></li>)}</ul></Info></section>
 
-      <section className="rounded-[2rem] border border-slate-200 bg-white p-7 sm:p-10"><h2 className="text-3xl font-semibold">進入門檻</h2><p className="mt-4 text-xl font-semibold">尚待補充目前背景</p><p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">目前 assessment 沒有收集完整的教育、技能、經驗、證照與作品集資料，因此不會把預設缺資料解讀成「容易進入」或「轉換成本高」。</p><h3 className="mt-7 font-semibold">依職業資料庫，通常需要了解或準備</h3><ul className="mt-3 space-y-2 text-sm leading-6 text-slate-600">{entryPath.gaps.map((item) => <li key={item}>• {item}</li>)}</ul></section>
+      <section className="rounded-[2rem] border border-slate-200 bg-white p-7 sm:p-10"><h2 className="text-3xl font-semibold">進入門檻</h2><p className="mt-4 text-xl font-semibold">{careerEntryBarrierLabel[career.entryBarrier]}</p><p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">這是職業資料庫整理的一般準備程度，不代表你的個人條件不足。由於目前測驗不蒐集完整履歷，個人 Entry Distance 會標示為「尚未估算」，也不會影響 Career Fit。</p><h3 className="mt-7 font-semibold">這類工作通常需要的準備</h3><ul className="mt-3 space-y-2 text-sm leading-6 text-slate-600">{careerRequirementItems(career).map((item) => <li key={item}>• {item}</li>)}</ul></section>
 
       <section className="rounded-[2rem] bg-blue-100 p-7 sm:p-10"><p className="text-sm font-bold tracking-widest text-slate-700 uppercase">20 分鐘職涯體驗</p><h2 className="mt-3 text-3xl font-semibold">試試「{career.titleZh}」的一小段工作</h2><p className="mt-5 max-w-3xl leading-7">{experience.purpose}</p><div className="mt-6 grid gap-3 sm:grid-cols-3"><Metric label="需要多久" value={experience.duration} /><Metric label="需要什麼" value={experience.requirements.join('、')} /><Metric label="最後會得到什麼" value={experience.outcome} /></div><Link to={`/experiments?career=${career.id}`} onClick={() => { saveExperience(); }} className="mt-7 inline-block rounded-full bg-slate-950 px-6 py-3 font-semibold text-white">{record ? '繼續這個體驗' : '開始 20 分鐘體驗'}</Link></section>
     </div>
