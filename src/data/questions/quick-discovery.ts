@@ -175,7 +175,7 @@ const situationalQuestions: Question[] = [
     talentOption('spatial_mechanical', '畫出結構、流程或部件怎麼互相作用'),
     talentOption('creative_ideation', '找它和熟悉物品相似的地方，再想幾種可能用法'),
   ]),
-  choice('SJT05', 'situational_choice', { domain: 'group_activity', scenario: '你和三個人要安排一場社區分享活動。主題大致確定，但怎樣才算完成還沒有共識，大家各有不同想法。', decisionPoint: '共同活動的完成標準不清時的第一步' }, '你最自然會先做什麼？', [
+  choice('SJT05', 'situational_choice', { domain: 'group_activity', scenario: '你和三個人要準備一場社區分享活動。主題已經選好，但要講哪些內容、準備到什麼程度，大家還沒有共識。', decisionPoint: '共同活動的內容與完成標準不清時的第一步' }, '你最自然會先做什麼？', [
     talentOption('learning_agility', '快速補齊主題的陌生知識，先聽懂每個人的說法'),
     talentOption('structuring_ambiguity', '整理已知、未知與待決策項目'),
     talentOption('coordination', '整理每個人負責的部分、需要交換的資訊與接續方式'),
@@ -202,13 +202,13 @@ const behaviorQuestions: Question[] = [
     talentOption('persistence', '先選定最關鍵的一項，集中做到跨過目前障礙'),
     talentOption('quantitative_reasoning', '估算每項需要的分鐘數和影響箱數，再分配時間'),
   ]),
-  scaled('BEH04', 'behavior', { domain: 'social_interaction', scenario: '你和三個人討論住家附近的安靜時段怎麼安排。其中兩個人的想法明顯相反，討論目前停在各自重複理由。', decisionPoint: '討論因相反立場而停滯時的貢獻' }, '哪個行動最接近你會先做的事？', [
-    talentOption('influence', '整理一套兼顧實際影響的理由，提出最可能被接受的安排'),
-    talentOption('conflict_navigation', '把兩邊重複的主張改寫成幾個可分開討論的分歧'),
-    talentOption('teaching_coaching', '分別問兩個人幾個具體問題，讓他們自己說清楚最在意什麼'),
-    talentOption('verbal_reasoning', '指出討論中哪些詞意不清，或哪些理由中間跳了一步'),
+  scaled('BEH04', 'behavior', { domain: 'social_interaction', scenario: '你和三個人要決定晚上幾點後不再製造噪音。其中兩個人各自堅持不同時間，一直重複同樣的理由，討論沒有進展。', decisionPoint: '兩個人堅持不同安排且討論停滯時的第一個行動' }, '你最可能先做什麼？', [
+    talentOption('influence', '說明不同時間對大家的實際影響，再提出最可能被接受的時間'),
+    talentOption('conflict_navigation', '把爭議拆成時間、例外情況等幾個問題，逐一討論'),
+    talentOption('teaching_coaching', '分別問兩個人為何堅持那個時間，請他們說清楚最在意的情況'),
+    talentOption('verbal_reasoning', '找出雙方說法中意思不清，或推論中間漏掉的地方'),
   ]),
-  scaled('BEH05', 'behavior', { domain: 'information', scenario: '你收到四頁從不同地方整理來的操作說明。內容有重複，也有幾處互相矛盾，你必須先判斷下一步該依據哪些資訊。', decisionPoint: '資訊重複且矛盾時的第一個處理動作' }, '哪個行動最接近你會先做的事？', [
+  scaled('BEH05', 'behavior', { domain: 'information', scenario: '你第一次要組裝一個簡單置物架，手上有四份不同來源的說明。內容有重複，也有幾處互相矛盾，你要先判斷該怎麼做。', decisionPoint: '組裝資訊重複且矛盾時的第一個處理動作' }, '你最可能先做什麼？', [
     talentOption('structuring_ambiguity', '先按主題分類四頁內容，標出已確定、未確定和互相矛盾的部分'),
     talentOption('pattern_recognition', '找出在不同頁重複出現的說法，再比對哪些有共同規律'),
     talentOption('spatial_mechanical', '畫成流程圖，把每個步驟和前後關係擺在同一張圖上'),
@@ -217,40 +217,40 @@ const behaviorQuestions: Question[] = [
 ];
 
 const evidenceQuestions: Question[] = [
-  scaled('EVD01', 'evidence', { domain: 'choice_decision', scenario: '一位不熟悉你背景的人想了解你曾經做成的事。你要從最近半年的經驗中，選一件能清楚交代原本情況、採取行動與最後結果的例子。', decisionPoint: '從近期經驗中選出可具體說明的一項貢獻' }, '哪一類例子最可能讓你提出完整細節？', [
-    talentOption('analytical_reasoning', '找出反覆出錯的原因，調整後同樣問題沒有再發生'),
-    talentOption('coordination', '安排幾個人的行動或幾個步驟，讓它們按時接上'),
-    talentOption('adaptability', '原本條件突然改變後，換一種做法仍把事情完成'),
-    talentOption('teaching_coaching', '示範並回饋幾次，讓另一個人能獨立完成原本不會的事'),
+  scaled('EVD01', 'evidence', { domain: 'choice_decision', scenario: '回想最近半年你做過的事情。請找一段你能清楚說出當時發生什麼、你做了什麼，以及最後有何結果的經驗。', decisionPoint: '從近期經驗中選出能具體說明過程與結果的一項貢獻' }, '你最能清楚說明哪一種經驗？', [
+    talentOption('analytical_reasoning', '我找出一件事反覆出錯的原因，調整後同樣問題沒有再發生'),
+    talentOption('coordination', '我安排幾個人的行動或幾個步驟，讓它們按時接上'),
+    talentOption('adaptability', '我遇到原本條件突然改變，換一種做法後仍然把事情完成'),
+    talentOption('teaching_coaching', '我示範並回饋幾次，讓另一個人能獨立完成原本不會的事'),
   ]),
-  scaled('EVD02', 'evidence', { domain: 'quality_check', scenario: '你要整理一頁自己的經驗紀錄，並放入一項別人可以核對的成果。可用的證明包括成品、前後數據、當時留下的紀錄或他人回饋。', decisionPoint: '選出最能被外部證據核對的一項成果' }, '哪一種成果最容易讓你拿出實際證明？', [
-    talentOption('quantitative_reasoning', '比較前後數字，用結果支持自己做出的判斷'),
-    talentOption('communication', '重整說明方式，讓原本誤解的人能正確採取行動'),
-    talentOption('initiative', '在沒有人要求前先開始處理，並留下可使用的成果'),
-    talentOption('precision', '在送出或使用前查到錯誤，修正後避免實際影響'),
+  scaled('EVD02', 'evidence', { domain: 'quality_check', scenario: '回想你做過，而且留下成品、前後數字、當時紀錄或他人回饋的事情。這些都可以作為別人能核對的具體證明。', decisionPoint: '選出最能用成品數字紀錄或回饋核對的一項成果' }, '哪一種結果，你最容易拿出具體證明？', [
+    talentOption('quantitative_reasoning', '我比較前後數字，用結果支持自己做出的判斷'),
+    talentOption('communication', '我重整說明方式，讓原本誤解的人能正確採取行動'),
+    talentOption('initiative', '我在沒有人要求前先開始處理，並留下可使用的成果'),
+    talentOption('precision', '我在送出或使用前查到錯誤，修正後避免實際影響'),
   ]),
-  scaled('EVD03', 'evidence', { domain: 'individual_problem', scenario: '你在整理過去一年的重要經驗，想找出一種不是偶然出現的做事方式。你需要選出至少在兩個不同場合做過，而且結果相近的例子。', decisionPoint: '選出曾在不同場合重複產生結果的行為' }, '哪一種行為最容易找到兩個以上的具體例子？', [
-    talentOption('pattern_recognition', '比對不同事件後看出共同規律，並用它判斷後續變化'),
-    talentOption('influence', '調整理由或說法，讓原本不同意的人願意採取行動'),
-    talentOption('planning', '拆開步驟並安排時間，使原本繁複的事情按期完成'),
-    talentOption('persistence', '幾次受阻後仍換方法繼續，最後完成原本目標'),
+  scaled('EVD03', 'evidence', { domain: 'individual_problem', scenario: '回想最近一年，你可能在不同事情中用過相似的做法。請找一種至少用過兩次，而且都帶來相近結果的做法。', decisionPoint: '選出曾在不同場合重複出現並產生相近結果的行為' }, '哪一種做法最容易讓你想到兩個以上的例子？', [
+    talentOption('pattern_recognition', '我比對不同事件後看出共同規律，並用它判斷後續變化'),
+    talentOption('influence', '我調整理由或說法，讓原本不同意的人願意採取行動'),
+    talentOption('planning', '我拆開步驟並安排時間，使原本繁複的事情按期完成'),
+    talentOption('persistence', '我幾次受阻後仍換方法繼續，最後完成原本目標'),
   ]),
-  scaled('EVD04', 'evidence', { domain: 'helping_someone', scenario: '一位朋友想知道你曾經怎麼幫一件事變得更好。你要選一段能說清楚「原本哪裡不順、你做了什麼、後來有何改變」的經驗。', decisionPoint: '選出能完整說明改善過程的一段經驗' }, '哪一類經驗最容易讓你說出具體過程？', [
-    talentOption('verbal_reasoning', '指出說法裡不清楚或跳躍的地方，改寫後讓決定更嚴謹'),
-    talentOption('emotional_perception', '留意對方沒有說出的顧慮，調整協助後讓互動更順'),
-    talentOption('prioritization', '明確放下影響較小的部分，把有限時間用在關鍵處'),
-    talentOption('creative_ideation', '提出原本沒人想到的做法，修改後真的被採用'),
+  scaled('EVD04', 'evidence', { domain: 'helping_someone', scenario: '回想你曾經讓一件不順利的事情變得更好。請找一段能清楚說出原本問題、你的做法和後來改變的經驗。', decisionPoint: '選出能具體說明問題做法與改變的一段改善經驗' }, '你最能清楚說明哪一種經驗？', [
+    talentOption('verbal_reasoning', '我指出說法裡不清楚或跳躍的地方，改寫後讓決定更嚴謹'),
+    talentOption('emotional_perception', '我留意對方沒有說出的顧慮，調整協助後讓互動更順'),
+    talentOption('prioritization', '我明確放下影響較小的部分，把有限時間用在關鍵處'),
+    talentOption('creative_ideation', '我提出原本沒人想到的做法，修改後真的被採用'),
   ]),
-  scaled('EVD05', 'evidence', { domain: 'practical_task', scenario: '你在整理一份個人經驗紀錄，其中一欄要填「我怎麼處理陌生又混亂的場面」。你可以從學習、活動或日常生活選例子，但只能先寫證據最具體的一項。', decisionPoint: '從不同生活經驗中選出可驗證的實際貢獻' }, '哪一類貢獻最容易讓你提出實例？', [
-    talentOption('spatial_mechanical', '曾重新安排物品、空間或動線，實際減少使用上的阻礙'),
-    talentOption('learning_agility', '曾快速弄懂陌生方法，接著正確用在當時要處理的事'),
-    talentOption('structuring_ambiguity', '曾把混在一起的問題分組，訂出別人也能跟著做的順序'),
-    talentOption('conflict_navigation', '曾釐清意見不同的原因，讓原本僵持的人重新一起處理'),
+  scaled('EVD05', 'evidence', { domain: 'practical_task', scenario: '回想你在學習、活動或日常生活中，曾經遇到陌生又混亂的事情。請找一段你能具體說明自己做過什麼的經驗。', decisionPoint: '從生活經驗中選出能具體說明的一項實際貢獻' }, '你最能清楚說明哪一種經驗？', [
+    talentOption('spatial_mechanical', '我重新安排物品、空間或動線，實際減少使用上的阻礙'),
+    talentOption('learning_agility', '我快速弄懂陌生方法，接著正確用在當時要處理的事'),
+    talentOption('structuring_ambiguity', '我把混在一起的問題分組，訂出別人也能跟著做的順序'),
+    talentOption('conflict_navigation', '我釐清意見不同的原因，讓原本僵持的人重新一起處理'),
   ]),
 ];
 
 const energyQuestions: Question[] = [
-  energyComparison('ENG01', { domain: 'planning', scenario: '一個共用置物區剛整理完成。你可以選一項後續責任，在接下來一週每天處理三十分鐘；四項都不急，也不影響整理成果。', decisionPoint: '比較不同活動帶來的持續能量與消耗' }, [
+  energyComparison('ENG01', { domain: 'planning', scenario: '一個共用置物區剛整理完成，接下來一週還有四件同樣重要的事情要做。每件事每天都要投入三十分鐘，而且你都有能力完成。', decisionPoint: '比較不同後續活動帶來的持續能量與消耗' }, [
     energyOption('analytical_reasoning', '追查哪些物品總是放錯位置，以及真正原因', 1),
     energyOption('communication', '寫一份讓第一次來的人也看得懂的使用說明', 1),
     energyOption('planning', '安排接下來一個月的整理步驟與檢查時間', 1),
@@ -307,7 +307,7 @@ const interestQuestions: Question[] = [
     interestOption('spatial_mechanical', '幾個部件的位置與力量如何一起讓裝置運作'),
     interestOption('creative_ideation', '兩個原本無關的概念如何組合成新的用途'),
   ]),
-  choice('INT05', 'interest', { domain: 'helping_someone', scenario: '一個小組在準備共同活動時卡住了。你可以旁觀一位熟練的協助者處理二十分鐘，四位協助者會從不同方向開始。', decisionPoint: '選擇最想觀察的一種解題方式' }, '你最想看哪一位怎麼做？', [
+  choice('INT05', 'interest', { domain: 'helping_someone', scenario: '一個小組在準備共同活動時卡住了。現在有四位熟練的人會用不同方法幫忙，你可以選一位，觀察他怎麼讓事情重新動起來。', decisionPoint: '選擇最想觀察的一種協助與解題方式' }, '你最想觀察哪一種做法？', [
     interestOption('learning_agility', '快速補齊陌生背景，再把新資訊立刻用進目前問題的人'),
     interestOption('structuring_ambiguity', '把混在一起的問題分層，整理成可決定項目的人'),
     interestOption('coordination', '分清每個人的部分與接續方式，讓合作重新順起來的人'),
@@ -334,7 +334,7 @@ const environmentQuestions: Question[] = [
     dimensionOption('build_process', '只有目標，照顧方法和紀錄方式都由你從零建立', 'environmentSignals'),
     dimensionOption('case_by_case', '不訂固定流程，每次依植物和天氣重新判斷', 'environmentSignals'),
   ]),
-  choice('ENV04', 'environment', { domain: 'practical_task', scenario: '一個月的物品維護活動有四種負責方式，每種的重要性、時數和需要的技能相同。差別只在移動程度與現場不確定性。', decisionPoint: '在條件相同時選擇可長期承受的場景' }, '哪一種方式最接近你願意長期投入的狀態？', [
+  choice('ENV04', 'environment', { domain: 'practical_task', scenario: '社區用品需要定期到現場檢查和維護。四種安排的時數和難度相同，只差在地點是否固定，以及現場狀況是否容易預料。', decisionPoint: '在時數難度相同時選擇可長期承受的工作場景' }, '哪一種安排較適合你長期投入？', [
     dimensionOption('stationary_predictable', '在固定地點處理，風險和每天變化都可預期', 'environmentSignals'),
     dimensionOption('stationary_high_stakes', '在固定地點處理，但每次判斷錯誤的影響較大', 'environmentSignals'),
     dimensionOption('mobile_predictable', '在幾個地點之間移動，但流程和風險都清楚', 'environmentSignals'),
@@ -367,7 +367,7 @@ const valueQuestions: Question[] = [
     dimensionOption('team_success', '一起做事的人說因為你的貢獻，大家合作得更順利', 'valueSignals'),
     dimensionOption('visible_ownership', '別人清楚指出你完整主導並留下了一項成果', 'valueSignals'),
   ]),
-  choice('VAL04', 'values', { domain: 'learning', scenario: '你受邀參加一個為期半年的成長機會，內容有吸引力，但必須先確認一項不可犧牲的條件。其餘條件都可以再協調。', decisionPoint: '接受長期成長機會前選擇不可犧牲的條件' }, '你會先守住哪一項？', [
+  choice('VAL04', 'values', { domain: 'learning', scenario: '你可以參加一個為期半年、每週固定投入時間的學習機會。內容很吸引你，但四項條件中只能先確保一項，其餘都需要配合調整。', decisionPoint: '參加長期學習機會前選擇最不能犧牲的條件' }, '你最想先確保哪一項？', [
     dimensionOption('work_life_fit', '時間安排能和休息、照顧責任及生活需求相容', 'valueSignals'),
     dimensionOption('learning', '過程中持續接觸新內容，能力能明顯成長', 'valueSignals'),
     dimensionOption('integrity', '採取的做法不需要違背自己的原則', 'valueSignals'),
