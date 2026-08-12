@@ -1,5 +1,6 @@
 import { CURRENT_RESULT_VERSIONS, PRODUCT_VERSIONS, type ResultVersionInfo } from '../config/versions';
-import { runCareerDiscoveryPipeline } from '../engine/integration-engine';
+import { QUICK_DISCOVERY_QUESTIONS } from '../data/questions';
+import { isQuestionResponseComplete } from '../utils/assessment-response';
 import {
   CAREER_FEEDBACK_OPTIONS,
   NEXT_STEP_CLARITY_OPTIONS,
@@ -186,14 +187,14 @@ export function parseStoredState(raw: string | null): AppStorageState {
     if (parsed.schemaVersion !== SCHEMA_VERSION && !isLegacyV2 && !isPreviousV3 && !isPreviousV4) return createInitialAppState();
     const sessionId = isString(parsed.sessionId) && parsed.sessionId.startsWith('beta_') ? parsed.sessionId : createAnonymousSessionId();
     const progress = parsed.assessmentProgress;
-    const assessmentProgress: AssessmentProgress = {
+    let assessmentProgress: AssessmentProgress = {
       currentIndex: typeof progress?.currentIndex === 'number' && Number.isFinite(progress.currentIndex) && progress.currentIndex >= 0
         ? Math.floor(progress.currentIndex)
         : 0,
       completed: !isLegacyV2 && typeof progress?.completed === 'boolean' ? progress.completed : false,
       updatedAt: isString(progress?.updatedAt) ? progress.updatedAt : '',
     };
-    const answers = Array.isArray(parsed.answers)
+    const parsedAnswers = Array.isArray(parsed.answers)
       ? parsed.answers.filter((answer): answer is QuestionResponse => Boolean(
           answer && isString(answer.questionId) && Array.isArray(answer.selectedOptionIds) &&
           answer.selectedOptionIds.every(isString) && isString(answer.answeredAt) &&
@@ -201,6 +202,10 @@ export function parseStoredState(raw: string | null): AppStorageState {
           (answer.ranking === undefined || (Array.isArray(answer.ranking) && answer.ranking.every(isString))),
         ))
       : [];
+    const latestAnswerById = new Map(parsedAnswers.map((answer) => [answer.questionId, answer]));
+    const answers = QUICK_DISCOVERY_QUESTIONS
+      .map(({ id }) => latestAnswerById.get(id))
+      .filter((answer): answer is QuestionResponse => Boolean(answer));
     const experiments = Array.isArray(parsed.experiments)
       ? parsed.experiments.filter((record): record is ExperimentRecord => Boolean(
           record && isString(record.careerId) && ['saved', 'in_progress', 'completed'].includes(record.status) &&
@@ -214,16 +219,29 @@ export function parseStoredState(raw: string | null): AppStorageState {
       parsed.careerResults.categories && Object.values(parsed.careerResults.categories).every(Array.isArray) &&
       parsed.careerResults.profiles && isResultVersionInfo(parsed.careerResults.versions) ? parsed.careerResults : null;
     const measurementIsCurrent = talentProfile?.baseTalents.every((talent) => Boolean(talent.measurement));
+    const assessmentIsCurrent = careerResults?.versions.assessmentVersion === CURRENT_RESULT_VERSIONS.assessmentVersion;
     const engineIsCurrent = careerResults?.versions.talentModelVersion === CURRENT_RESULT_VERSIONS.talentModelVersion
-      && careerResults.versions.matchingEngineVersion === CURRENT_RESULT_VERSIONS.matchingEngineVersion;
-    if (assessmentProgress.completed && answers.length > 0 && careerResults !== null && (!measurementIsCurrent || !engineIsCurrent)) {
-      const recalculated = runCareerDiscoveryPipeline(answers, { education: 'none' });
-      talentProfile = recalculated.talentProfile;
-      careerResults = {
-        matches: recalculated.matches,
-        categories: recalculated.categories,
-        profiles: recalculated.profiles,
-        versions: CURRENT_RESULT_VERSIONS,
+      && careerResults.versions.matchingEngineVersion === CURRENT_RESULT_VERSIONS.matchingEngineVersion
+      && careerResults.versions.careerDatasetVersion === CURRENT_RESULT_VERSIONS.careerDatasetVersion
+      && careerResults.versions.explanationVersion === CURRENT_RESULT_VERSIONS.explanationVersion;
+    const firstIncompleteIndex = QUICK_DISCOVERY_QUESTIONS.findIndex((question) =>
+      !isQuestionResponseComplete(question, latestAnswerById.get(question.id)),
+    );
+    if (assessmentProgress.completed && answers.length > 0 && careerResults !== null && !assessmentIsCurrent) {
+      talentProfile = null;
+      careerResults = null;
+      assessmentProgress = {
+        currentIndex: firstIncompleteIndex >= 0 ? firstIncompleteIndex : 0,
+        completed: false,
+        updatedAt: assessmentProgress.updatedAt,
+      };
+    } else if (assessmentProgress.completed && answers.length > 0 && careerResults !== null && (!measurementIsCurrent || !engineIsCurrent)) {
+      talentProfile = null;
+      careerResults = null;
+      assessmentProgress = {
+        currentIndex: firstIncompleteIndex >= 0 ? firstIncompleteIndex : QUICK_DISCOVERY_QUESTIONS.length - 1,
+        completed: false,
+        updatedAt: assessmentProgress.updatedAt,
       };
     }
     return {

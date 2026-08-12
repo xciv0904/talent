@@ -2,7 +2,8 @@ import { useEffect, useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { CAREER_PROFILES } from '../data/careers';
 import { interpretSpecificCareer } from '../engine';
-import { markCareerExplored, saveExperiment, useAppState } from '../services';
+import { markCareerExplored, saveExperiment } from '../services/storage';
+import { useAppState } from '../services/use-app-state';
 import type { AbilityAlignment, RecommendationSource, RecommendationStrength } from '../types';
 import { buildCareerExperiencePlan, careerEntryBarrierLabel, careerRequirementItems, dimensionLabels, formatFitIndex, formatScore, skillNameLabel } from '../utils';
 

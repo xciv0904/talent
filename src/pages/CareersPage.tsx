@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { CareerCard, PublicCareerCard } from '../components';
 import { buildPrimaryCareerPresentation, interpretPublicCareers } from '../engine';
-import { useAppState } from '../services';
+import { useAppState } from '../services/use-app-state';
 import type { PublicCareerInterpretation } from '../types';
 
 export function CareersPage() {

@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import { CURRENT_RESULT_VERSIONS } from '../src/config/versions';
+import { runCareerDiscoveryPipeline } from '../src/engine';
 import { createInitialAppState, parseStoredState, SCHEMA_VERSION } from '../src/services/storage';
+import { SYNTHETIC_PROFILES } from './fixtures/synthetic-profiles';
 
 describe('unified storage contract', () => {
   it('contains every persisted Public Beta field', () => {
@@ -65,5 +68,29 @@ describe('unified storage contract', () => {
     expect(parsed.talentProfile).toBeNull();
     expect(parsed.careerResults).toBeNull();
     expect(parsed.experiments).toEqual([]);
+  });
+
+  it('invalidates old Assessment results and resumes at the first incompatible Energy answer', () => {
+    const state = createInitialAppState();
+    const currentAnswers = SYNTHETIC_PROFILES[0].responses;
+    const oldAnswers = currentAnswers.map((answer) => answer.questionId.startsWith('ENG')
+      ? { ...answer, selectedOptionIds: answer.selectedOptionIds.slice(0, 1) }
+      : answer);
+    const pipeline = runCareerDiscoveryPipeline(currentAnswers);
+    state.answers = oldAnswers;
+    state.assessmentProgress = { currentIndex: 34, completed: true, updatedAt: '2026-08-12T00:00:00.000Z' };
+    state.talentProfile = pipeline.talentProfile;
+    state.careerResults = {
+      matches: pipeline.matches,
+      categories: pipeline.categories,
+      profiles: pipeline.profiles,
+      versions: { ...CURRENT_RESULT_VERSIONS, assessmentVersion: '1.0.1' },
+    };
+
+    const migrated = parseStoredState(JSON.stringify(state));
+    expect(migrated.assessmentProgress).toMatchObject({ currentIndex: 15, completed: false });
+    expect(migrated.answers).toHaveLength(35);
+    expect(migrated.talentProfile).toBeNull();
+    expect(migrated.careerResults).toBeNull();
   });
 });

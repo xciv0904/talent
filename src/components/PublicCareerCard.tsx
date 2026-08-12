@@ -49,7 +49,7 @@ export function PublicCareerCard({ result }: { result: PublicCareerInterpretatio
   return <article className={`rounded-[2rem] border bg-white p-6 sm:p-8 ${isStrong ? 'border-blue-200 shadow-sm' : 'border-slate-200'}`}>
     <div className="flex flex-wrap items-start justify-between gap-4">
       <div>
-        <p className="text-xs font-bold tracking-[.16em] text-slate-500 uppercase">Public Career · #{result.relativeRank}</p>
+        <p className="text-xs font-bold tracking-[.16em] text-slate-500">職涯方向 · 相對排名 #{result.relativeRank}</p>
         <h3 className="mt-2 text-2xl font-semibold sm:text-3xl">{result.title}</h3>
         <p className="mt-3 max-w-2xl leading-7 text-slate-600">{result.description}</p>
       </div>
@@ -79,7 +79,7 @@ export function PublicCareerCard({ result }: { result: PublicCareerInterpretatio
         <Metric label="能力吻合" value={result.talentOverlap >= 0.68 ? '高' : '中'} />
         <Metric label="興趣吻合" value={result.interestAlignment >= 0.68 ? '高' : '中'} />
         <Metric label="環境摩擦" value={riskLabel[result.environmentFriction]} />
-        <Metric label="Energy Risk" value={riskLabel[result.energyRisk]} />
+        <Metric label="能量消耗風險" value={riskLabel[result.energyRisk]} />
       </div>
       <p className="mt-5 text-sm leading-6 text-slate-700">在目前收錄的工作中，這類工作有多項核心能力受到直接作答支持，且沒有大型環境或能量衝突。因此值得放在你的優先探索清單；這不是成功保證，也不是要你立刻做職涯決定。</p>
     </div>}

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { CAREER_PROFILES } from '../data/careers';
-import { saveExperienceReflection, saveExperiment, useAppState } from '../services';
+import { saveExperienceReflection, saveExperiment } from '../services/storage';
+import { useAppState } from '../services/use-app-state';
 import type { ExperienceFeeling, ExperiencePreference } from '../types';
 import { buildCareerExperiencePlan, guidanceFromFeeling } from '../utils';
 
@@ -23,7 +24,7 @@ export function ExperimentsPage() {
   const suggestions = state.careerResults?.matches.slice(0, 6) ?? [];
 
   return <main className="mx-auto max-w-6xl px-5 py-14"><header className="max-w-3xl"><p className="text-sm font-bold tracking-widest text-slate-500 uppercase">Try the work, not the title</p><h1 className="mt-3 text-5xl font-semibold">20 分鐘職涯體驗</h1><p className="mt-4 text-lg leading-8 text-slate-600">不是測你夠不夠格，而是用一小段真實工作活動，確認自己有興趣、普通，還是很消耗。</p></header>
-    {career ? <ExperienceRunner career={career} record={record} feeling={feeling} preference={preference} reflection={reflection} onFeeling={setFeeling} onPreference={setPreference} /> : <section className="mt-12 rounded-3xl border border-dashed border-slate-300 p-7"><h2 className="text-2xl font-semibold">先選一個想試的方向</h2><p className="mt-3 text-slate-600">從結果頁選定 Career Direction 後，這裡會帶你逐步完成一個 20 分鐘體驗。</p><Link to="/results" className="mt-5 inline-block rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white">回到 Career Navigator</Link></section>}
+    {career ? <ExperienceRunner career={career} record={record} feeling={feeling} preference={preference} reflection={reflection} onFeeling={setFeeling} onPreference={setPreference} /> : <section className="mt-12 rounded-3xl border border-dashed border-slate-300 p-7"><h2 className="text-2xl font-semibold">先選一個想試的方向</h2><p className="mt-3 text-slate-600">從結果頁選定職涯方向後，這裡會帶你逐步完成一個 20 分鐘體驗。</p><Link to="/results" className="mt-5 inline-block rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white">回到職涯導航</Link></section>}
 
     <section className="mt-16"><h2 className="text-2xl font-semibold">其他可以試的工作</h2><div className="mt-5 grid gap-4 md:grid-cols-3">{suggestions.map((match) => { const item = CAREER_PROFILES.find(({ id }) => id === match.careerId)!; return <Link key={match.careerId} to={`/experiments?career=${match.careerId}`} className="rounded-3xl bg-blue-50 p-6"><p className="text-sm text-slate-600">20 分鐘</p><h3 className="mt-2 text-xl font-semibold">試試 {item.titleZh}</h3><p className="mt-3 text-sm leading-6 text-slate-600">{item.coreTasks[0]}</p></Link>; })}</div>{!suggestions.length && <Link to="/assessment" className="mt-5 inline-block underline">先完成測驗取得建議</Link>}</section>
   </main>;
@@ -62,7 +63,7 @@ function Guidance({ guidance, careerId }: { guidance: 'continue' | 'try_another'
     : guidance === 'try_another'
       ? { title: '可以再試一次不同類型的任務', body: '這次感受偏中性，還不足以支持或排除整個方向。換一個核心任務再試，比立刻下結論更可靠。' }
       : { title: '這個方向可能不用優先', body: '這次工作活動帶來明顯消耗或排斥。這不代表你做不到，但目前可以先把探索時間放到另一個方向。' };
-  return <div className="mt-8 rounded-3xl bg-blue-100 p-6" aria-live="polite"><p className="text-sm font-bold text-slate-600">這次體驗的 Guidance</p><h4 className="mt-2 text-2xl font-semibold">{copy.title}</h4><p className="mt-3 max-w-2xl text-sm leading-6 text-slate-700">{copy.body}</p><div className="mt-5 flex flex-wrap gap-3">{guidance === 'continue' ? <Link to={`/career/${careerId}`} className="rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white">繼續探索這個方向</Link> : <Link to="/results#direction-choice" className="rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white">換一條路看看</Link>}<Link to="/results" className="rounded-full border border-slate-400 px-5 py-3 text-sm font-semibold">回到 Career Navigator</Link></div></div>;
+  return <div className="mt-8 rounded-3xl bg-blue-100 p-6" aria-live="polite"><p className="text-sm font-bold text-slate-600">這次體驗的建議</p><h4 className="mt-2 text-2xl font-semibold">{copy.title}</h4><p className="mt-3 max-w-2xl text-sm leading-6 text-slate-700">{copy.body}</p><div className="mt-5 flex flex-wrap gap-3">{guidance === 'continue' ? <Link to={`/career/${careerId}`} className="rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white">繼續探索這個方向</Link> : <Link to="/results#direction-choice" className="rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white">換一條路看看</Link>}<Link to="/results" className="rounded-full border border-slate-400 px-5 py-3 text-sm font-semibold">回到職涯導航</Link></div></div>;
 }
 
 function Info({ label, value }: { label: string; value: string }) { return <div className="rounded-2xl bg-slate-50 p-4"><strong>{label}</strong><p className="mt-2 text-sm leading-6 text-slate-600">{value}</p></div>; }

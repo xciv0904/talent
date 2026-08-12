@@ -8,16 +8,14 @@ import {
   buildBetaFeedbackExport,
   buildDiagnosticReport,
   downloadJson,
-  saveGuidedAnswer,
   saveCareerFeedback,
-  saveNavigatorNeed,
   saveNextStepClarity,
   saveOptionalComment,
   saveOverallFeedback,
   saveSurpriseFeedback,
-  selectCareerDirection,
-  useAppState,
-} from '../services';
+} from '../services/beta-feedback';
+import { saveGuidedAnswer, saveNavigatorNeed, selectCareerDirection } from '../services/storage';
+import { useAppState } from '../services/use-app-state';
 import type { CareerFeedbackChoice, NavigatorNeed, NextStepClarityChoice, OverallFeedbackChoice, PrioritizedCareerDirection, SurpriseFeedbackChoice } from '../types';
 import { buildWorkPatternSummary, formatFitIndex, workMeaningForTalent } from '../utils';
 
@@ -93,7 +91,7 @@ export function ResultsPage() {
   };
 
   return <main className="mx-auto max-w-7xl px-5 py-12 sm:py-20">
-    <header className="max-w-4xl"><p className="text-sm font-bold tracking-[.2em] text-slate-600 uppercase">Your Career Navigator · Beta</p><h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-6xl">你的結果目前比較接近這 3 個方向。</h1><p className="mt-5 max-w-3xl text-lg leading-8 text-slate-600">{topDirectionNames.join('、')}。先看它們的工作活動差異，再選一個方向做低成本確認。</p></header>
+    <header className="max-w-4xl"><p className="text-sm font-bold tracking-[.2em] text-slate-600">職涯探索導航 · Beta</p><h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-6xl">你的結果目前比較接近這 3 個方向。</h1><p className="mt-5 max-w-3xl text-lg leading-8 text-slate-600">{topDirectionNames.join('、')}。先看它們的工作活動差異，再選一個方向做低成本確認。</p></header>
 
     <section className="mt-10 rounded-3xl bg-blue-50 p-6"><p className="text-sm font-bold text-slate-600">你的下一步摘要</p><p className="mt-2 text-lg font-semibold">先比較「{topDirectionNames.slice(0, 2).join('」與「')}」實際每天在做什麼。</p><p className="mt-2 text-sm leading-6 text-slate-600">你的前幾項能力集中在「{strengths.map(({ talentId }) => BASE_TALENTS.find(({ id }) => id === talentId)?.nameZh).join('、')}」。優先確認哪一種工作活動讓你願意持續投入，而不是只看職稱。</p></section>
 

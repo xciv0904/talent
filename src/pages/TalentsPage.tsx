@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { BASE_TALENTS, COMPOSITE_TALENTS } from '../data/talents';
-import { useAppState } from '../services';
+import { useAppState } from '../services/use-app-state';
 import type { TalentCategory, TalentId, TalentScore } from '../types';
 import { formatScore } from '../utils';
 
@@ -47,7 +47,7 @@ export function TalentsPage() {
 
   return <main className="mx-auto max-w-7xl min-w-0 overflow-x-clip px-5 py-14">
     <header className="min-w-0 max-w-3xl">
-      <p className="text-sm font-bold tracking-widest text-slate-600 uppercase">Talent Landscape</p>
+      <p className="text-sm font-bold tracking-widest text-slate-600">天賦分布</p>
       <h1 className="mt-4 break-words text-4xl leading-tight font-semibold sm:text-5xl">三個天賦群集，不是一張扁平排行榜。</h1>
       <p className="mt-4 text-lg text-slate-600">圓點大小反映目前分數；狀態與能量仍保留在每個節點中。</p>
     </header>
@@ -64,8 +64,8 @@ export function TalentsPage() {
     </div>
 
     <section className="mt-20 min-w-0">
-      <h2 className="break-words text-3xl font-semibold">Composite Talents 如何組成</h2>
-      <p className="mt-3 text-slate-600">複合天賦不是額外評分標籤，而是既有 Base Talents 的加權組合。</p>
+      <h2 className="break-words text-3xl font-semibold">複合天賦如何組成</h2>
+      <p className="mt-3 text-slate-600">複合天賦不是額外評分標籤，而是既有基礎天賦的加權組合。</p>
       <div className="mt-7 grid min-w-0 gap-4 md:grid-cols-2">
         {[...talentProfile.compositeTalents].sort((a, b) => b.score - a.score).map((score) => {
           const composite = COMPOSITE_TALENTS.find(({ id }) => id === score.compositeTalentId)!;
@@ -91,5 +91,5 @@ export function TalentsPage() {
 }
 
 function Empty() {
-  return <main className="mx-auto max-w-2xl px-5 py-24 text-center"><h1 className="text-4xl font-semibold">先完成測驗，才能建立 Talent Landscape</h1><Link to="/assessment" className="mt-7 inline-block rounded-full bg-slate-950 px-6 py-3 text-white">前往測驗</Link></main>;
+  return <main className="mx-auto max-w-2xl px-5 py-24 text-center"><h1 className="text-4xl font-semibold">先完成測驗，才能建立天賦分布</h1><Link to="/assessment" className="mt-7 inline-block rounded-full bg-slate-950 px-6 py-3 text-white">前往測驗</Link></main>;
 }

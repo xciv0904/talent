@@ -13,8 +13,10 @@
 html { scroll-behavior: smooth; }
 body { margin: 0; min-width: 320px; min-height: 100vh; }
 button, a { -webkit-tap-highlight-color: transparent; }
-button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid #7894b5; outline-offset: 3px; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible { outline: 3px solid #7894b5; outline-offset: 3px; }
 ::selection { background: #7894b5; color: #17202b; }
+.skip-link { position: fixed; z-index: 100; left: 1rem; top: 1rem; transform: translateY(-200%); border-radius: 999px; background: #17202b; padding: .75rem 1rem; color: white; font-weight: 700; transition: transform .15s ease; }
+.skip-link:focus { transform: translateY(0); }
 
 .editorial-shell { width: min(100% - 2rem, 88rem); margin-inline: auto; }
 .display-title { font-family: Georgia, "Times New Roman", serif; font-weight: 400; letter-spacing: -.055em; text-wrap: balance; }

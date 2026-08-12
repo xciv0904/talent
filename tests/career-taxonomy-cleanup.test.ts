@@ -53,7 +53,7 @@ describe('career results taxonomy cleanup', () => {
 
   it('Case E: missing background data does not produce a strong easier-transition conclusion', () => {
     expect(compareSource).toContain('職業通常門檻');
-    expect(compareSource).toContain('個人 Entry Distance');
+    expect(compareSource).toContain('個人進入距離');
     expect(compareSource).toContain('尚未估算');
     expect(detailSource).toContain('不代表你的個人條件不足');
     expect(detailSource).toContain('不會影響 Career Fit');

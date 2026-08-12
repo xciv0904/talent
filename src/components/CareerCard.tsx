@@ -42,16 +42,16 @@ export function CareerCard({ match, compact = false, feedbackMode, feedbackValue
       {!compact && (
         <>
           <p className="mt-5 text-sm font-semibold">主要比對指標</p><ul className="mt-3 space-y-2 text-sm text-slate-700">
-            <li className="leading-6">Talent Match · {formatFitIndex(match.talentMatch)}</li>
-            <li className="leading-6">Interest Match · {formatFitIndex(match.interestMatch)}</li>
-            <li className="leading-6">Work Style Match · {formatFitIndex(match.workStyleMatch)}</li>
+            <li className="leading-6">能力吻合 · {formatFitIndex(match.talentMatch)}</li>
+            <li className="leading-6">興趣吻合 · {formatFitIndex(match.interestMatch)}</li>
+            <li className="leading-6">工作方式吻合 · {formatFitIndex(match.workStyleMatch)}</li>
           </ul>
           <p className="mt-4 text-sm text-slate-700"><strong>主要工作：</strong>{career.coreTasks[0]}</p>
-          <p className="mt-4 text-sm text-slate-700"><strong>Potential friction：</strong>{match.potentialFrictions[0] ?? '目前沒有明顯摩擦訊號。'}</p>
+          <p className="mt-4 text-sm text-slate-700"><strong>主要摩擦：</strong>{match.potentialFrictions[0] ?? '目前沒有明顯摩擦訊號。'}</p>
           {feedbackMode && onFeedback && <div className="mt-5 border-t border-ink/10 pt-4"><p className="text-sm font-semibold">{feedbackMode === 'surprise' ? '這個意外方向對你來說是？' : '你怎麼看這個推薦？'}</p><div className="mt-3 flex flex-wrap gap-2">{(feedbackMode === 'surprise' ? surpriseFeedbackOptions : careerFeedbackOptions).map(([value, label]) => <button key={value} type="button" aria-pressed={feedbackValue === value} onClick={() => onFeedback(value)} className={`rounded-full border px-3 py-2 text-left text-xs leading-4 ${feedbackValue === value ? 'border-ink bg-ink text-white' : 'border-ink/15 bg-white text-ink/65'}`}>{label}</button>)}</div></div>}
         </>
       )}
-      <details className="mt-5 rounded-2xl bg-slate-50 p-4"><summary className="cursor-pointer text-xs font-semibold">查看分析依據</summary><div className="mt-3 space-y-2 text-xs leading-5 text-slate-600">{rank && <p>在目前收錄的 {total} 種工作中，位於你的前 {rank} 名。</p>}<p>Career Fit Index · {formatFitIndex(match.matchScore)}</p><p>Confidence · {match.confidence}</p><p>職業通常門檻 · {careerEntryBarrierLabel[career.entryBarrier]}</p><p>個人 Entry Distance · 尚未估算</p><p>Talent / Interest / Work Style · {formatFitIndex(match.talentMatch)} / {formatFitIndex(match.interestMatch)} / {formatFitIndex(match.workStyleMatch)}</p><p>Environment / Values · {formatFitIndex(match.environmentMatch)} / {formatFitIndex(match.valuesMatch)}</p><p>Career Fit 是相對吻合指標，不是成功、錄取或適合度百分比。</p></div></details>
+      <details className="mt-5 rounded-2xl bg-slate-50 p-4"><summary className="cursor-pointer text-xs font-semibold">查看分析依據</summary><div className="mt-3 space-y-2 text-xs leading-5 text-slate-600">{rank && <p>在目前收錄的 {total} 種工作中，位於你的前 {rank} 名。</p>}<p>職涯吻合指標 · {formatFitIndex(match.matchScore)}</p><p>分析信心 · {match.confidence}</p><p>職業通常門檻 · {careerEntryBarrierLabel[career.entryBarrier]}</p><p>個人進入距離 · 尚未估算</p><p>能力／興趣／工作方式 · {formatFitIndex(match.talentMatch)} / {formatFitIndex(match.interestMatch)} / {formatFitIndex(match.workStyleMatch)}</p><p>環境／價值觀 · {formatFitIndex(match.environmentMatch)} / {formatFitIndex(match.valuesMatch)}</p><p>職涯吻合指標是相對比較，不是成功、錄取或適合度百分比。</p></div></details>
       <Link to={`/career/${career.id}`} className="mt-auto pt-6 text-sm font-semibold text-ink underline decoration-coral decoration-2 underline-offset-4">深入了解這份工作 →</Link>
     </article>
   );

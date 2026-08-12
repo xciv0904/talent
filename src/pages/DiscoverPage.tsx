@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { QUICK_DISCOVERY_QUESTIONS } from '../data/questions';
-import { useAppState } from '../services';
+import { useAppState } from '../services/use-app-state';
+import { isQuestionResponseComplete } from '../utils';
 
 const demoOptions = [
   { id: 'A', label: '先把資訊整理清楚', talent: '模糊結構化', insight: '你可能會在混亂中先找出脈絡，讓別人知道下一步從哪裡開始。' },
@@ -13,7 +14,10 @@ const demoOptions = [
 export function DiscoverPage() {
   const state = useAppState();
   const [demoChoice, setDemoChoice] = useState<(typeof demoOptions)[number] | null>(null);
-  const hasProgress = state.answers.length > 0 && !state.assessmentProgress.completed;
+  const completedAnswers = QUICK_DISCOVERY_QUESTIONS.filter((question) =>
+    isQuestionResponseComplete(question, state.answers.find(({ questionId }) => questionId === question.id)),
+  ).length;
+  const hasProgress = completedAnswers > 0 && !state.assessmentProgress.completed;
   return <main className="overflow-hidden">
     <section className="relative isolate border-b border-ink/10">
       <div className="hero-orb hero-orb-one" aria-hidden="true" /><div className="hero-orb hero-orb-two" aria-hidden="true" />
@@ -26,7 +30,8 @@ export function DiscoverPage() {
             <Link to="/assessment" className="button-primary">{hasProgress ? '繼續探索自己' : '開始探索自己'} <span aria-hidden="true">↗</span></Link>
             <a href="#interactive-demo" className="button-secondary">看看它怎麼分析 <span aria-hidden="true">↓</span></a>
           </div>
-          {hasProgress && <p className="mt-4 text-sm text-ink/50">已保存 {state.answers.length} / {QUICK_DISCOVERY_QUESTIONS.length} 題</p>}
+          <p className="mt-4 text-sm text-ink/50">約 8–10 分鐘 · 35 題 · 自動保存進度</p>
+          {hasProgress && <p className="mt-2 text-sm font-semibold text-ink/60">已完成 {completedAnswers} / {QUICK_DISCOVERY_QUESTIONS.length} 題</p>}
         </div>
         <TalentConstellation />
       </div>
@@ -35,11 +40,11 @@ export function DiscoverPage() {
 
     <section id="interactive-demo" className="section-space bg-ink text-cream scroll-mt-24">
       <div className="editorial-shell grid gap-12 lg:grid-cols-[.7fr_1.3fr] lg:items-start">
-        <div className="reveal-block"><p className="eyebrow text-mint">A small signal</p><h2 className="section-title mt-5">一個選擇，透露你如何讓事情開始。</h2><p className="mt-6 max-w-md leading-7 text-white/55">這只是互動示範，不會寫入正式 assessment，也不會影響你的結果。</p></div>
+        <div className="reveal-block"><p className="eyebrow text-mint">一個小訊號</p><h2 className="section-title mt-5">一個選擇，透露你如何讓事情開始。</h2><p className="mt-6 max-w-md leading-7 text-white/55">這只是互動示範，不會寫入正式測驗，也不會影響你的結果。</p></div>
         <div className="demo-panel reveal-block">
           <p className="text-sm font-semibold text-white/45">QUESTION DEMO · 01</p><h3 className="mt-5 max-w-2xl text-2xl font-medium leading-snug sm:text-4xl">當大家不知道事情該怎麼開始時，你比較常：</h3>
           <div className="mt-8 grid gap-3 sm:grid-cols-2">{demoOptions.map((option) => <button key={option.id} type="button" aria-pressed={demoChoice?.id === option.id} onClick={() => setDemoChoice(option)} className={`demo-option ${demoChoice?.id === option.id ? 'demo-option-active' : ''}`}><span>{option.id}</span><strong>{option.label}</strong></button>)}</div>
-          <div aria-live="polite" className={`insight-reveal ${demoChoice ? 'insight-reveal-visible' : ''}`}>{demoChoice ? <><div className="insight-mark">↳</div><div><p className="text-xs font-bold tracking-[.16em] text-coral uppercase">Possible signal · {demoChoice.talent}</p><p className="mt-2 text-lg leading-7 text-white/80">{demoChoice.insight}</p></div></> : <p className="text-white/40">選一個最接近你的自然反應。</p>}</div>
+          <div aria-live="polite" className={`insight-reveal ${demoChoice ? 'insight-reveal-visible' : ''}`}>{demoChoice ? <><div className="insight-mark">↳</div><div><p className="text-xs font-bold tracking-[.16em] text-coral uppercase">可能訊號 · {demoChoice.talent}</p><p className="mt-2 text-lg leading-7 text-white/80">{demoChoice.insight}</p></div></> : <p className="text-white/40">選一個最接近你的自然反應。</p>}</div>
         </div>
       </div>
     </section>
@@ -55,11 +60,11 @@ export function DiscoverPage() {
     </div></section>
 
     <section className="section-space"><div className="editorial-shell">
-      <SectionIntro number="03" eyebrow="Career Direction Preview" title="先找到值得探索的方向，再看有哪些工作。" body="Fit 不是結論。你會看見支持理由、可能摩擦、信心程度，以及今天可以先做的低成本行動。" />
+      <SectionIntro number="03" eyebrow="職涯方向預覽" title="先找到值得探索的方向，再看有哪些工作。" body="Career Fit 不是結論。你會看見支持理由、可能摩擦、信心程度，以及今天可以先做的低成本行動。" />
       <div className="mt-14 grid gap-5 lg:grid-cols-[1.35fr_.82fr_.82fr]"><CareerPreview featured title="使用者研究員" en="UX Researcher" score="61" reasons={['能讀懂話語背後的需求', '擅長整理模糊資訊', '喜歡探索人的行為']} friction="高密度訪談可能消耗能量" /><CareerPreview title="服務設計師" en="Service Designer" score="58" reasons={['系統思考', '協作與轉譯']} friction="專案模糊度偏高" /><CareerPreview title="學習體驗設計師" en="Learning Designer" score="55" reasons={['教學與結構化', '概念轉譯']} friction="需累積作品集" /></div>
     </div></section>
 
-    <section className="section-space bg-coral text-ink"><div className="editorial-shell grid gap-12 lg:grid-cols-[.8fr_1.2fr] lg:items-end"><div><p className="eyebrow">Surprise Career</p><h2 className="display-title mt-5 text-5xl sm:text-7xl">那個你沒想過，卻可能意外適合的方向。</h2></div><div className="surprise-card"><p className="text-sm font-bold tracking-[.16em] uppercase">Unexpected possibility · 01</p><h3 className="mt-6 text-4xl font-semibold sm:text-6xl">博物館教育企劃</h3><p className="mt-5 max-w-xl text-lg leading-8 text-ink/65">它同時需要概念轉譯、觀眾洞察與體驗設計。不是因為職稱相似，而是底層工作模式與你吻合。</p><div className="mt-8 flex flex-wrap gap-2">{['跨出原本職涯 family', 'Entry Distance · Medium', '可用 20 分鐘體驗驗證'].map((item) => <span key={item} className="rounded-full border border-ink/20 px-4 py-2 text-sm">{item}</span>)}</div></div></div></section>
+    <section className="section-space bg-coral text-ink"><div className="editorial-shell grid gap-12 lg:grid-cols-[.8fr_1.2fr] lg:items-end"><div><p className="eyebrow">意外職涯方向</p><h2 className="display-title mt-5 text-5xl sm:text-7xl">那個你沒想過，卻可能意外適合的方向。</h2></div><div className="surprise-card"><p className="text-sm font-bold tracking-[.16em] uppercase">意外可能 · 01</p><h3 className="mt-6 text-4xl font-semibold sm:text-6xl">博物館教育企劃</h3><p className="mt-5 max-w-xl text-lg leading-8 text-ink/65">它同時需要概念轉譯、觀眾洞察與體驗設計。不是因為職稱相似，而是底層工作模式與你吻合。</p><div className="mt-8 flex flex-wrap gap-2">{['跨出原本職涯類別', '進入準備 · 中等', '可用 20 分鐘體驗驗證'].map((item) => <span key={item} className="rounded-full border border-ink/20 px-4 py-2 text-sm">{item}</span>)}</div></div></div></section>
 
     <section className="section-space"><div className="editorial-shell"><SectionIntro number="04" eyebrow="How it works" title="從真實反應，到可以驗證的下一步。" /><div className="process-line mt-16">{[['01', '回答情境', '選你自然會做的事，不選看起來最正確的答案。'], ['02', '辨認訊號', '交叉比對能力、興趣、能量、環境與價值。'], ['03', '形成天賦', '建立 Base Talent 與 Composite Talent landscape。'], ['04', '探索職涯', '比較 Career Fit、摩擦、信心與進入距離。'], ['05', '小步驗證', '用 20 分鐘職涯體驗收集真實的新證據。']].map(([n, title, body]) => <article key={n} className="process-step"><span>{n}</span><h3>{title}</h3><p>{body}</p></article>)}</div></div></section>
 
@@ -75,4 +80,4 @@ function TalentConstellation() { return <div className="constellation reveal-blo
 function SectionIntro({ number, eyebrow, title, body }: { number: string; eyebrow: string; title: string; body?: string }) { return <div className="reveal-block"><div className="flex items-center gap-4"><span className="section-number">{number}</span><p className="eyebrow">{eyebrow}</p></div><h2 className="section-title mt-6">{title}</h2>{body && <p className="mt-6 max-w-xl text-base leading-8 text-ink/60 sm:text-lg">{body}</p>}</div>; }
 function EditorialTalentCard({ index, title, en, body, ingredients, tone }: { index: string; title: string; en: string; body: string; ingredients: string[]; tone: string }) { return <article className={`editorial-card card-${tone} reveal-block`}><div className="flex justify-between text-xs font-bold tracking-[.15em] uppercase"><span>{index}</span><span>Composite Talent</span></div><h3 className="mt-16 text-3xl font-semibold">{title}</h3><p className="mt-1 text-sm text-ink/45">{en}</p><p className="mt-5 leading-7 text-ink/65">{body}</p><div className="mt-8 flex flex-wrap gap-2">{ingredients.map((item) => <span key={item}>{item}</span>)}</div></article>; }
 function TalentMapPreview() { return <div className="map-preview reveal-block"><span className="absolute right-4 top-4 rounded-full bg-white/70 px-3 py-1 text-[10px] font-bold tracking-widest text-ink/50 uppercase">示意</span><div className="map-cluster cluster-thinking"><p>THINKING</p><i className="bubble bubble-xl">結構化<br /><b>91</b></i><i className="bubble bubble-md">分析<br /><b>82</b></i><i className="bubble bubble-sm">學習<br /><b>77</b></i></div><div className="map-cluster cluster-people"><p>PEOPLE</p><i className="bubble bubble-lg">洞察<br /><b>88</b></i><i className="bubble bubble-sm">轉譯<br /><b>79</b></i></div><div className="map-cluster cluster-execution"><p>EXECUTION</p><i className="bubble bubble-md">推進<br /><b>72</b></i><i className="bubble bubble-sm">精準<br /><b>68</b></i></div></div>; }
-function CareerPreview({ title, en, score, reasons, friction, featured = false }: { title: string; en: string; score: string; reasons: string[]; friction: string; featured?: boolean }) { return <article className={`career-preview reveal-block ${featured ? 'career-preview-featured' : ''}`}><div><p className="w-fit rounded-full bg-blue-100 px-3 py-1 text-xs font-bold">{featured ? '優先探索 · 示意' : '同樣值得探索 · 示意'}</p><h3 className="mt-4 text-2xl font-semibold sm:text-3xl">{title}</h3><p className="text-sm text-ink/45">{en}</p></div><p className="mt-8 text-sm font-semibold">為什麼值得了解</p><ul className="mt-3 space-y-3">{reasons.map((reason) => <li key={reason}>↳ {reason}</li>)}</ul><div className="mt-auto pt-10"><p className="border-t border-ink/10 pt-4 text-sm text-ink/55"><b>Potential friction</b><br />{friction}</p></div><details className="mt-4 text-xs text-ink/45"><summary>查看分析依據</summary><p className="mt-2">Career Fit Index · {score} / 100。這是相對吻合指標，不是適合度百分比。</p></details></article>; }
+function CareerPreview({ title, en, score, reasons, friction, featured = false }: { title: string; en: string; score: string; reasons: string[]; friction: string; featured?: boolean }) { return <article className={`career-preview reveal-block ${featured ? 'career-preview-featured' : ''}`}><div><p className="w-fit rounded-full bg-blue-100 px-3 py-1 text-xs font-bold">{featured ? '優先探索 · 示意' : '同樣值得探索 · 示意'}</p><h3 className="mt-4 text-2xl font-semibold sm:text-3xl">{title}</h3><p className="text-sm text-ink/45">{en}</p></div><p className="mt-8 text-sm font-semibold">為什麼值得了解</p><ul className="mt-3 space-y-3">{reasons.map((reason) => <li key={reason}>↳ {reason}</li>)}</ul><div className="mt-auto pt-10"><p className="border-t border-ink/10 pt-4 text-sm text-ink/55"><b>主要摩擦</b><br />{friction}</p></div><details className="mt-4 text-xs text-ink/45"><summary>查看分析依據</summary><p className="mt-2">Career Fit Index · {score} / 100。這是相對吻合指標，不是適合度百分比。</p></details></article>; }
