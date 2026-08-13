@@ -7,13 +7,30 @@ export interface SyntheticProfile {
   responses: QuestionResponse[];
 }
 
+const questionGroupOffset: Record<string, number> = {
+  SJT: 0,
+  BEH: 5,
+  EVD: 10,
+  ENG: 15,
+  INT: 20,
+  ENV: 25,
+  VAL: 30,
+};
+
+const stableQuestionIndex = (questionId: string) => {
+  const group = questionId.slice(0, 3);
+  const number = Number(questionId.slice(3));
+  return (questionGroupOffset[group] ?? 0) + Math.max(0, number - 1);
+};
+
 const optionTalentIds = (option: QuestionOption, channel: 'talentSignals' | 'energySignals' | 'talentInterestSignals') =>
   Object.keys(option[channel] ?? {}) as TalentId[];
 
 export function makeResponses(targetTalents: readonly TalentId[], seed: number): QuestionResponse[] {
   const targetSet = new Set(targetTalents);
 
-  return QUICK_DISCOVERY_QUESTIONS.map((question, questionIndex) => {
+  return QUICK_DISCOVERY_QUESTIONS.map((question) => {
+    const questionIndex = stableQuestionIndex(question.id);
     let option = question.options[(questionIndex + seed) % question.options.length];
 
     if (['situational_choice', 'forced_choice', 'behavior', 'evidence'].includes(question.type)) {

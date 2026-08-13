@@ -1,5 +1,5 @@
 import { CURRENT_RESULT_VERSIONS, PRODUCT_VERSIONS, type ResultVersionInfo } from '../config/versions';
-import { QUICK_DISCOVERY_QUESTIONS } from '../data/questions';
+import { CORE_DISCOVERY_QUESTIONS, QUICK_DISCOVERY_QUESTIONS, SUPPLEMENTAL_DISCOVERY_QUESTIONS } from '../data/questions';
 import { isQuestionResponseComplete } from '../utils/assessment-response';
 import {
   CAREER_FEEDBACK_OPTIONS,
@@ -184,7 +184,8 @@ export function parseStoredState(raw: string | null): AppStorageState {
     const isLegacyV2 = parsed.schemaVersion === 2;
     const isPreviousV3 = parsed.schemaVersion === 3;
     const isPreviousV4 = parsed.schemaVersion === 4;
-    if (parsed.schemaVersion !== SCHEMA_VERSION && !isLegacyV2 && !isPreviousV3 && !isPreviousV4) return createInitialAppState();
+    const isPreviousV5 = parsed.schemaVersion === 5;
+    if (parsed.schemaVersion !== SCHEMA_VERSION && !isLegacyV2 && !isPreviousV3 && !isPreviousV4 && !isPreviousV5) return createInitialAppState();
     const sessionId = isString(parsed.sessionId) && parsed.sessionId.startsWith('beta_') ? parsed.sessionId : createAnonymousSessionId();
     const progress = parsed.assessmentProgress;
     let assessmentProgress: AssessmentProgress = {
@@ -227,6 +228,9 @@ export function parseStoredState(raw: string | null): AppStorageState {
     const firstIncompleteIndex = QUICK_DISCOVERY_QUESTIONS.findIndex((question) =>
       !isQuestionResponseComplete(question, latestAnswerById.get(question.id)),
     );
+    if (isPreviousV5 && !assessmentProgress.completed && firstIncompleteIndex >= 0) {
+      assessmentProgress = { ...assessmentProgress, currentIndex: firstIncompleteIndex };
+    }
     if (assessmentProgress.completed && answers.length > 0 && careerResults !== null && !assessmentIsCurrent) {
       talentProfile = null;
       careerResults = null;
@@ -323,6 +327,21 @@ export function resetAssessment(): void {
       reflectionResults: [],
       navigatorState: { guidedAnswers: {} },
       betaFeedback: fresh.betaFeedback,
+    };
+  });
+}
+
+export function beginSupplementalAssessment(): void {
+  updateAppState((state) => {
+    const firstIncompleteSupplement = SUPPLEMENTAL_DISCOVERY_QUESTIONS.findIndex((question) =>
+      !isQuestionResponseComplete(question, state.answers.find(({ questionId }) => questionId === question.id)),
+    );
+    const currentIndex = firstIncompleteSupplement >= 0
+      ? CORE_DISCOVERY_QUESTIONS.length + firstIncompleteSupplement
+      : QUICK_DISCOVERY_QUESTIONS.length - 1;
+    return {
+      ...state,
+      assessmentProgress: { ...state.assessmentProgress, currentIndex, completed: false, updatedAt: now() },
     };
   });
 }

@@ -5,7 +5,7 @@ export const PRODUCT_VERSIONS = {
   matchingEngineVersion: '2.1.0',
   explanationVersion: '1.2.0',
   betaFeedbackSchemaVersion: 2,
-  storageSchemaVersion: 5,
+  storageSchemaVersion: 6,
 } as const;
 
 export interface ResultVersionInfo {

@@ -88,9 +88,44 @@ describe('unified storage contract', () => {
     };
 
     const migrated = parseStoredState(JSON.stringify(state));
-    expect(migrated.assessmentProgress).toMatchObject({ currentIndex: 15, completed: false });
+    expect(migrated.assessmentProgress).toMatchObject({ currentIndex: 10, completed: false });
     expect(migrated.answers).toHaveLength(35);
     expect(migrated.talentProfile).toBeNull();
     expect(migrated.careerResults).toBeNull();
+  });
+
+  it('migrates an incomplete v5 session to the first unanswered question in the 25 + 10 order', () => {
+    const state = createInitialAppState();
+    const oldFirstFifteen = new Set([
+      'SJT01', 'SJT02', 'SJT03', 'SJT04', 'SJT05',
+      'BEH01', 'BEH02', 'BEH03', 'BEH04', 'BEH05',
+      'EVD01', 'EVD02', 'EVD03', 'EVD04', 'EVD05',
+    ]);
+    state.answers = SYNTHETIC_PROFILES[0].responses.filter(({ questionId }) => oldFirstFifteen.has(questionId));
+    state.assessmentProgress = { currentIndex: 15, completed: false, updatedAt: '2026-08-12T00:00:00.000Z' };
+
+    const migrated = parseStoredState(JSON.stringify({ ...state, schemaVersion: 5 }));
+    expect(migrated.assessmentProgress).toMatchObject({ currentIndex: 2, completed: false });
+    expect(migrated.answers).toHaveLength(15);
+  });
+
+  it('preserves a current preliminary result without marking the full assessment complete', () => {
+    const state = createInitialAppState();
+    const coreIds = new Set([
+      'SJT01', 'BEH01', 'INT01', 'SJT02', 'EVD01', 'ENV01', 'BEH02', 'SJT03', 'VAL01', 'EVD02',
+      'ENG02', 'BEH03', 'SJT04', 'ENV02', 'EVD03', 'INT03', 'BEH04', 'SJT05', 'VAL03', 'EVD04',
+      'ENG04', 'BEH05', 'ENV05', 'EVD05', 'VAL04',
+    ]);
+    const coreAnswers = SYNTHETIC_PROFILES[0].responses.filter(({ questionId }) => coreIds.has(questionId));
+    const pipeline = runCareerDiscoveryPipeline(coreAnswers);
+    state.answers = coreAnswers;
+    state.assessmentProgress = { currentIndex: 24, completed: false, updatedAt: '2026-08-14T00:00:00.000Z' };
+    state.talentProfile = pipeline.talentProfile;
+    state.careerResults = { matches: pipeline.matches, categories: pipeline.categories, profiles: pipeline.profiles, versions: CURRENT_RESULT_VERSIONS };
+
+    const restored = parseStoredState(JSON.stringify(state));
+    expect(restored.assessmentProgress).toMatchObject({ currentIndex: 24, completed: false });
+    expect(restored.talentProfile).not.toBeNull();
+    expect(restored.careerResults).not.toBeNull();
   });
 });

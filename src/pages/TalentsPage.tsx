@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { AssessmentStageNotice } from '../components';
 import { BASE_TALENTS, COMPOSITE_TALENTS } from '../data/talents';
 import { useAppState } from '../services/use-app-state';
 import type { CompositeTalentScore, TalentCategory, TalentId, TalentScore } from '../types';
@@ -46,6 +47,7 @@ export function TalentsPage() {
       <p className="mt-4 text-lg leading-8 text-slate-600">不用一次讀完 20 項能力。先理解最明顯的訊號，再視需要展開完整分布。</p>
       <p className="mt-3 text-sm leading-6 text-slate-500">分數代表這次作答中的相對訊號強度，不是能力百分比，也不是對你的永久定義。</p>
     </header>
+    <AssessmentStageNotice className="mt-8" />
 
     <section className="mt-10" aria-labelledby="primary-talents-title">
       <h2 id="primary-talents-title" className="sr-only">最值得注意的三個能力</h2>

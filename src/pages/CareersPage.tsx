@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { CareerCard, PublicCareerCard } from '../components';
+import { AssessmentStageNotice, CareerCard, PublicCareerCard } from '../components';
 import { buildPrimaryCareerPresentation, interpretPublicCareers } from '../engine';
 import { useAppState } from '../services/use-app-state';
 import type { PublicCareerInterpretation } from '../types';
@@ -25,6 +25,7 @@ export function CareersPage() {
 
   return <main className="mx-auto max-w-7xl px-4 py-12 sm:px-5 sm:py-16">
     <header className="max-w-4xl"><p className="text-sm font-bold tracking-[.18em] text-slate-500 uppercase">Career Direction</p><h1 className="mt-3 font-serif text-[clamp(3rem,7vw,5.5rem)] font-normal leading-none tracking-[-.04em]">你的職涯方向</h1><p className="mt-5 text-lg leading-8 text-ink/60">先看哪些方向與你的能力和工作方式重疊最多；如果想深入，再查看完整 60 種職業排名。</p><div className="mt-7 rounded-3xl bg-blue-50 p-6"><p className="text-lg font-semibold leading-8">{summary}</p><p className="mt-2 text-sm leading-6 text-slate-600">相對排名與推薦證據分開判斷。排名第一但沒有正向能力證據，不會被稱為「非常適合」。</p></div></header>
+    <AssessmentStageNotice className="mt-8" />
 
     <div className="mt-14 space-y-16">
       {strong.length > 0

@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { AssessmentStageNotice } from '../components';
 import { CAREER_PROFILES } from '../data/careers';
 import { interpretSpecificCareer } from '../engine';
 import { markCareerExplored, saveExperiment } from '../services/storage';
@@ -60,6 +61,7 @@ export function CareerDetailPage() {
     </div></header>
 
     <div className="mx-auto max-w-7xl space-y-16 px-5 py-14">
+      <AssessmentStageNotice />
       {interpretation ? <section className="rounded-[2rem] border border-blue-200 bg-blue-50 p-7 sm:p-10">
         <p className="text-sm font-bold tracking-widest text-slate-600 uppercase">Recommendation Summary</p>
         <h2 className="mt-3 text-3xl font-semibold">為什麼會出現在你的結果？</h2>

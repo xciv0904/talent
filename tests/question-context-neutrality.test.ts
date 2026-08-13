@@ -26,7 +26,7 @@ const contextPersonas = [
 ] as const;
 
 function signalContractHash() {
-  const payload = QUICK_DISCOVERY_QUESTIONS.map(({ id, type, options }) => ({
+  const payload = [...QUICK_DISCOVERY_QUESTIONS].sort((left, right) => left.id.localeCompare(right.id)).map(({ id, type, options }) => ({
     id,
     type,
     options: options.map(({
@@ -85,6 +85,6 @@ describe('Quick Discovery context neutrality', () => {
   });
 
   it('preserves the complete 35-question signal contract', () => {
-    expect(signalContractHash()).toBe('3fe3da6b');
+    expect(signalContractHash()).toBe('7473e977');
   });
 });

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { QUICK_DISCOVERY_QUESTIONS } from '../data/questions';
+import { CORE_DISCOVERY_QUESTIONS, QUICK_DISCOVERY_QUESTIONS } from '../data/questions';
 import { useAppState } from '../services/use-app-state';
 import { isQuestionResponseComplete } from '../utils';
 
@@ -18,6 +18,9 @@ export function DiscoverPage() {
     isQuestionResponseComplete(question, state.answers.find(({ questionId }) => questionId === question.id)),
   ).length;
   const hasProgress = completedAnswers > 0 && !state.assessmentProgress.completed;
+  const hasPreliminaryResults = Boolean(state.talentProfile && state.careerResults && !state.assessmentProgress.completed);
+  const primaryTarget = state.assessmentProgress.completed ? '/results' : '/assessment';
+  const primaryLabel = state.assessmentProgress.completed ? '查看我的結果' : hasPreliminaryResults ? '完成補充驗證' : hasProgress ? '繼續探索自己' : '開始探索自己';
   return <main className="overflow-hidden">
     <section className="relative isolate border-b border-ink/10">
       <div className="hero-orb hero-orb-one" aria-hidden="true" /><div className="hero-orb hero-orb-two" aria-hidden="true" />
@@ -27,11 +30,11 @@ export function DiscoverPage() {
           <h1 className="display-title mt-6 max-w-4xl text-[clamp(3rem,4.4vw,5.5rem)] leading-[.94]">你不是沒有方向，<br /><span className="text-coral">你只是還沒看見</span><br />自己的能力可以走去哪裡。</h1>
           <p className="mt-8 max-w-2xl text-base leading-8 text-ink/65 sm:text-lg">從你的日常選擇、思考方式與真實經驗中，找出你可能從沒意識到的天賦，並整理出值得你下一步探索的職涯方向。</p>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-            <Link to="/assessment" className="button-primary">{hasProgress ? '繼續探索自己' : '開始探索自己'} <span aria-hidden="true">↗</span></Link>
+            <Link to={primaryTarget} className="button-primary">{primaryLabel} <span aria-hidden="true">↗</span></Link>
             <a href="#interactive-demo" className="button-secondary">看看它怎麼分析 <span aria-hidden="true">↓</span></a>
           </div>
-          <p className="mt-4 text-sm text-ink/50">約 8–10 分鐘 · 35 題 · 自動保存進度</p>
-          {hasProgress && <p className="mt-2 text-sm font-semibold text-ink/60">已完成 {completedAnswers} / {QUICK_DISCOVERY_QUESTIONS.length} 題</p>}
+          <p className="mt-4 text-sm text-ink/50">約 5–7 分鐘 · 25 題先看初步結果 · 可再做 10 題提高完整度</p>
+          {hasProgress && <p className="mt-2 text-sm font-semibold text-ink/60">{hasPreliminaryResults ? `核心 ${CORE_DISCOVERY_QUESTIONS.length} 題已完成，尚有 ${QUICK_DISCOVERY_QUESTIONS.length - completedAnswers} 題可補充` : `核心探索已完成 ${completedAnswers} / ${CORE_DISCOVERY_QUESTIONS.length} 題`}</p>}
         </div>
         <TalentConstellation />
       </div>

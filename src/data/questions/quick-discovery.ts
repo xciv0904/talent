@@ -381,7 +381,7 @@ const valueQuestions: Question[] = [
   ]),
 ];
 
-export const QUICK_DISCOVERY_QUESTIONS = [
+const ALL_DISCOVERY_QUESTIONS = [
   ...situationalQuestions,
   ...behaviorQuestions,
   ...evidenceQuestions,
@@ -389,4 +389,36 @@ export const QUICK_DISCOVERY_QUESTIONS = [
   ...interestQuestions,
   ...environmentQuestions,
   ...valueQuestions,
+] as const satisfies readonly Question[];
+
+export const CORE_DISCOVERY_QUESTION_IDS = [
+  'SJT01', 'BEH01', 'INT01', 'SJT02', 'EVD01',
+  'ENV01', 'BEH02', 'SJT03', 'VAL01', 'EVD02',
+  'ENG02', 'BEH03', 'SJT04', 'ENV02', 'EVD03',
+  'INT03', 'BEH04', 'SJT05', 'VAL03', 'EVD04',
+  'ENG04', 'BEH05', 'ENV05', 'EVD05', 'VAL04',
+] as const;
+
+export const SUPPLEMENTAL_DISCOVERY_QUESTION_IDS = [
+  'ENG01', 'INT02', 'ENV03', 'VAL02', 'ENG03',
+  'INT04', 'ENV04', 'VAL05', 'ENG05', 'INT05',
+] as const;
+
+const questionsById = new Map(ALL_DISCOVERY_QUESTIONS.map((question) => [question.id, question]));
+const selectQuestions = (ids: readonly string[]): Question[] => ids.map((id) => {
+  const question = questionsById.get(id);
+  if (!question) throw new Error(`Unknown discovery question: ${id}`);
+  return question;
+});
+
+export const CORE_DISCOVERY_QUESTIONS = selectQuestions(CORE_DISCOVERY_QUESTION_IDS);
+export const SUPPLEMENTAL_DISCOVERY_QUESTIONS = selectQuestions(SUPPLEMENTAL_DISCOVERY_QUESTION_IDS);
+
+/**
+ * Presentation order: 25-question core discovery followed by 10 optional
+ * confidence-building questions. Signal mappings and scoring stay unchanged.
+ */
+export const QUICK_DISCOVERY_QUESTIONS = [
+  ...CORE_DISCOVERY_QUESTIONS,
+  ...SUPPLEMENTAL_DISCOVERY_QUESTIONS,
 ] as const satisfies readonly Question[];

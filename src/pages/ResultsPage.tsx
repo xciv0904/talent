@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CareerCard, PublicCareerCard } from '../components';
+import { AssessmentStageNotice, CareerCard, PublicCareerCard } from '../components';
 import { CAREER_PROFILES } from '../data/careers';
 import { BASE_TALENTS, COMPOSITE_TALENTS } from '../data/talents';
 import { buildCareerDirections, buildDynamicTieBreaker, buildExplorationPriority, buildPrimaryCareerPresentation, interpretPublicCareers } from '../engine';
@@ -80,6 +80,7 @@ export function ResultsPage() {
     ? `你目前有 ${primaryStrong.length} 類工作方向同時符合主要能力需求，也沒有明顯的環境或能量衝突。`
     : `你的結果目前比較接近以下 3 類工作方向。每個方向都包含可用的能力重疊，也各有需要實際確認的地方。`;
   const topDirectionNames = directions.slice(0, 3).map(({ title }) => title);
+  const isPreliminary = !state.assessmentProgress.completed;
 
   const handleNavigator = (need: NavigatorNeed) => {
     saveNavigatorNeed(need);
@@ -91,7 +92,8 @@ export function ResultsPage() {
   };
 
   return <main className="mx-auto max-w-7xl px-5 py-12 sm:py-20">
-    <header className="max-w-4xl"><p className="text-sm font-bold tracking-[.2em] text-slate-600">職涯探索導航 · Beta</p><h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-6xl">你的結果目前比較接近這 3 個方向。</h1><p className="mt-5 max-w-3xl text-lg leading-8 text-slate-600">{topDirectionNames.join('、')}。先看它們的工作活動差異，再選一個方向做低成本確認。</p></header>
+    <header className="max-w-4xl"><p className="text-sm font-bold tracking-[.2em] text-slate-600">職涯探索導航 · Beta</p><h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-6xl">{isPreliminary ? '你的初步結果目前比較接近這 3 個方向。' : '你的結果目前比較接近這 3 個方向。'}</h1><p className="mt-5 max-w-3xl text-lg leading-8 text-slate-600">{topDirectionNames.join('、')}。先看它們的工作活動差異，再選一個方向做低成本確認。</p></header>
+    <AssessmentStageNotice className="mt-8" />
 
     <section className="mt-10 rounded-3xl bg-blue-50 p-6"><p className="text-sm font-bold text-slate-600">你的下一步摘要</p><p className="mt-2 text-lg font-semibold">先比較「{topDirectionNames.slice(0, 2).join('」與「')}」實際每天在做什麼。</p><p className="mt-2 text-sm leading-6 text-slate-600">你的前幾項能力集中在「{strengths.map(({ talentId }) => BASE_TALENTS.find(({ id }) => id === talentId)?.nameZh).join('、')}」。優先確認哪一種工作活動讓你願意持續投入，而不是只看職稱。</p></section>
 
@@ -106,7 +108,7 @@ export function ResultsPage() {
         return <article key={item.talentId} className="rounded-3xl border border-slate-200 bg-white p-6"><p className="text-xs font-bold tracking-widest text-slate-500 uppercase">{definition.category}</p><h3 className="mt-3 text-2xl font-semibold">{definition.nameZh}</h3><p className="mt-3 leading-7 text-slate-600">{definition.description}</p><div className="mt-5 rounded-2xl bg-slate-50 p-4"><p className="text-xs font-bold text-slate-500">你的作答證據</p><p className="mt-2 text-sm leading-6">{evidence}</p></div><p className="mt-5 text-sm leading-6"><strong>這在工作上代表：</strong>{workMeaningForTalent(item.talentId)}</p></article>;
       })}</div><Link to="/talents" className="mt-5 inline-block font-semibold underline decoration-blue-300 decoration-2 underline-offset-4">查看完整能力分析 →</Link></section>
 
-      <section>{sectionTitle('03', '你目前最適合發揮的工作方向')}<div className="mb-9 max-w-4xl rounded-3xl bg-blue-50 p-6"><p className="text-lg font-semibold leading-8">{careerSummary}</p></div><div className="space-y-14">
+      <section>{sectionTitle('03', isPreliminary ? '目前較接近的工作方向' : '你目前最適合發揮的工作方向')}<div className="mb-9 max-w-4xl rounded-3xl bg-blue-50 p-6"><p className="text-lg font-semibold leading-8">{careerSummary}</p></div><div className="space-y-14">
         {primaryStrong.length > 0
           ? <PublicCareerTier title="非常適合" subtitle="目前證據支持較完整，而且沒有明顯的大型環境或能量衝突。" results={primaryStrong} />
           : exploratoryFallback.length > 0 && <PublicCareerTier title="目前較值得探索的方向" subtitle="以下方向在相對排名與部分工作需求上較接近你；卡片會直接列出已達需求的能力與仍需確認的摩擦。" results={exploratoryFallback} />}
