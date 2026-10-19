@@ -58,7 +58,7 @@ export function ResultsPage() {
     careerResults?.categories.surprise_me.map(({ careerId }) => careerId) ?? [],
     { strong: 4, moderate: 3, lower: 2, surprise: 3 },
   ) : undefined, [careerResults, publicCareers]);
-  if (!talentProfile || !careerResults) return <main className="mx-auto max-w-3xl px-5 py-24 text-center"><h1 className="text-4xl font-semibold">還沒有可顯示的結果</h1><p className="mt-4 text-slate-600">完成探索題目後，這裡會整理值得先探索的方向與下一步。</p><Link to="/assessment" className="mt-8 inline-block rounded-full bg-slate-950 px-6 py-3 font-semibold text-white">前往測驗</Link></main>;
+  if (!talentProfile || !careerResults) return <main className="mx-auto max-w-3xl px-5 py-24 text-center"><h1 className="text-4xl font-semibold">還沒有可顯示的結果</h1><Link to="/lab" className="button-secondary mt-6">免測驗，先進 Career Lab →</Link><p className="mt-4 text-slate-600">完成探索題目後，這裡會整理值得先探索的方向與下一步。</p><Link to="/assessment" className="mt-8 inline-block rounded-full bg-slate-950 px-6 py-3 font-semibold text-white">前往測驗</Link></main>;
 
   const sortedTalents = [...talentProfile.baseTalents].sort((a, b) => b.score - a.score);
   const qualified = sortedTalents.filter(({ status }) => ['natural_strength', 'developed_strength', 'emerging_potential'].includes(status));
@@ -99,30 +99,17 @@ export function ResultsPage() {
   };
 
   return <main className="mx-auto max-w-7xl px-5 py-12 sm:py-20">
-    <header className="max-w-4xl"><p className="text-sm font-bold tracking-[.2em] text-slate-600">職涯探索導航 · Beta</p><h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-6xl">{isPreliminary ? '你的初步結果目前比較接近這 3 個方向。' : '你的結果目前比較接近這 3 個方向。'}</h1><p className="mt-5 max-w-3xl text-lg leading-8 text-slate-600">{topDirectionNames.join('、')}。先看它們的工作活動差異，再選一個方向做低成本確認。</p></header>
+    <Link to="/lab/life" className="button-secondary mb-6">Career Lab｜帶著目前結果體驗職涯 →</Link>
+    <header className="max-w-4xl"><p className="text-sm font-bold tracking-[.2em] text-slate-600">職涯探索導航 · Beta</p><h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-6xl">{suggestedDirection ? `先從「${suggestedDirection.title}」開始探索` : '先比較兩種工作，再選下一步'}</h1><p className="mt-5 max-w-3xl text-lg leading-8 text-slate-600">{isPreliminary ? '25 題已幫你縮小探索範圍。' : '你的回答已整理成可開始的方向。'} 接下來不用急著選職業，先確認哪種日常工作你願意做。</p></header>
     <AssessmentStageNotice className="mt-8" />
 
-    <section className="mt-10 overflow-hidden rounded-[2rem] bg-slate-950 text-white" aria-labelledby="start-here-title">
-      <div className="grid gap-8 p-6 sm:p-9 lg:grid-cols-[1.1fr_.9fr] lg:p-11">
-        <div>
-          <p className="text-sm font-bold tracking-[.18em] text-blue-200 uppercase">先從這裡開始</p>
-          <h2 id="start-here-title" className="mt-3 max-w-2xl text-3xl leading-tight font-semibold sm:text-4xl">不用讀完整份結果。現在先選一個願意多了解的方向。</h2>
-          <p className="mt-4 max-w-2xl leading-7 text-slate-300">這不是要你決定職業，只是選出第一個值得花 20 分鐘驗證的工作方向。</p>
-          {selected ? <div className="mt-7 rounded-3xl bg-white/10 p-5"><p className="text-sm text-slate-300">你已選擇</p><p className="mt-1 text-2xl font-semibold">{selected.title}</p><button type="button" onClick={() => document.getElementById('your-next-step')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} className="mt-5 rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-950">繼續下一步 →</button></div> : suggestedDirection ? <div className="mt-7 rounded-3xl bg-white/10 p-5"><p className="text-sm font-semibold text-blue-200">建議先看</p><p className="mt-1 text-2xl font-semibold">{suggestedDirection.title}</p><p className="mt-2 text-sm leading-6 text-slate-300">{suggestedDirection.description}</p><button type="button" onClick={() => selectAndContinue(suggestedDirection)} className="mt-5 rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-950">先了解這個方向 →</button></div> : <div className="mt-7 rounded-3xl bg-white/10 p-5"><p className="font-semibold">目前三個方向很接近，不需要勉強選第一名。</p><button type="button" onClick={() => handleNavigator('guided_direction')} className="mt-5 rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-950">用實際工作差異幫我選 →</button></div>}
-        </div>
-        <div className="rounded-3xl bg-white p-5 text-slate-950 sm:p-6">
-          <p className="text-sm font-bold text-slate-500">只看這三步</p>
-          <ol className="mt-5 space-y-5">
-            <li className="flex gap-4"><span className="grid size-8 shrink-0 place-items-center rounded-full bg-blue-100 text-sm font-bold">1</span><div><strong>先看一個方向</strong><p className="mt-1 text-sm leading-6 text-slate-600">了解它平常在做什麼，不用先看所有職稱。</p></div></li>
-            <li className="flex gap-4"><span className="grid size-8 shrink-0 place-items-center rounded-full bg-blue-100 text-sm font-bold">2</span><div><strong>確認一個喜歡與一個摩擦</strong><p className="mt-1 text-sm leading-6 text-slate-600">先判斷工作內容是否值得繼續探索。</p></div></li>
-            <li className="flex gap-4"><span className="grid size-8 shrink-0 place-items-center rounded-full bg-blue-100 text-sm font-bold">3</span><div><strong>做一次 20 分鐘體驗</strong><p className="mt-1 text-sm leading-6 text-slate-600">用真實感受取代一次就決定職涯。</p></div></li>
-          </ol>
-          <div className="mt-6 flex flex-col gap-2"><a href="#direction-comparison" className="rounded-full border border-slate-300 px-4 py-3 text-center text-sm font-semibold">先比較 3 個方向</a><button type="button" onClick={() => handleNavigator('guided_direction')} className="rounded-full px-4 py-3 text-sm font-semibold underline decoration-blue-300 decoration-2 underline-offset-4">我還是不知道怎麼選</button></div>
-        </div>
-      </div>
+    <section className="mt-8 rounded-[2rem] bg-slate-950 p-6 text-white sm:p-9" aria-labelledby="start-here-title">
+      <p className="text-sm font-bold text-blue-200">這份結果對你有什麼用</p>
+      <h2 id="start-here-title" className="mt-3 text-2xl font-semibold sm:text-3xl">{selected ? `下一步：試一段「${selected.title}」的工作` : suggestedDirection ? `先試「${suggestedDirection.title}」，看你喜不喜歡做` : `先比較「${topDirectionNames.slice(0, 2).join('」和「')}」的日常差別`}</h2>
+      <div className="mt-6 grid gap-5 md:grid-cols-3"><div><strong>你已經知道</strong><p className="mt-2 text-sm leading-7 text-slate-300">{qualified.length ? `你的回答顯示：${workMeaningForTalent(qualified[0].talentId)} 先找會用到這類做法的工作。` : '目前的回答還不足以列出明確優勢；先用一段工作體驗補充。'}</p></div><div><strong>找工作時先看</strong><p className="mt-2 text-sm leading-7 text-slate-300">{(selected ?? suggestedDirection)?.description ?? '先看每天實際做什麼、和多少人互動、忙的時候如何處理，再看職稱。'}</p></div><div><strong>現在就做</strong><p className="mt-2 text-sm leading-7 text-slate-300">{selected ?? suggestedDirection ? '用 20 分鐘試一小段工作，再記下想不想繼續、做完累不累。' : '用兩種工作內容的差別，選出你更願意先試的一種。'}</p></div></div>
+      <div className="mt-6 flex flex-wrap gap-3">{selected && entryCareer ? <Link to={`/experiments?career=${entryCareer}`} className="rounded-full bg-white px-5 py-3 font-semibold text-slate-950">開始 20 分鐘體驗 →</Link> : suggestedDirection ? <button type="button" onClick={() => selectAndContinue(suggestedDirection)} className="rounded-full bg-white px-5 py-3 font-semibold text-slate-950">選這個方向，開始體驗 →</button> : <button type="button" onClick={() => handleNavigator('guided_direction')} className="rounded-full bg-white px-5 py-3 font-semibold text-slate-950">幫我比較這兩種工作 →</button>}<a href="#direction-comparison" className="rounded-full border border-white/40 px-5 py-3 font-semibold">查看工作差別</a></div>
+      <details className="mt-6 border-t border-white/20 pt-4"><summary className="cursor-pointer text-sm text-slate-300">這個建議能說明什麼？</summary><p className="mt-3 text-sm leading-7 text-slate-300">建議幫你排下一步探索順序，不是錄取或成功保證。能力、工作感受與入職條件要分開看；下面可查原始作答依據。</p></details>
     </section>
-
-    <section className="mt-8 rounded-3xl bg-blue-50 p-6"><p className="text-sm font-bold text-slate-600">一眼摘要</p><p className="mt-2 text-lg font-semibold">先比較「{topDirectionNames.slice(0, 2).join('」與「')}」實際每天在做什麼。</p><p className="mt-2 text-sm leading-6 text-slate-600">你的前幾項能力集中在「{strengths.map(({ talentId }) => BASE_TALENTS.find(({ id }) => id === talentId)?.nameZh).join('、')}」。這是選擇探索起點的線索，不是要求你先讀完所有能力。</p></section>
 
     {hasJourney && <section className="mt-10 rounded-3xl border border-blue-200 bg-blue-50 p-6"><p className="text-sm font-bold text-slate-600">你上次探索到這裡</p><p className="mt-2 text-lg font-semibold">{selected ? `已選擇先了解「${selected.title}」` : state.completedExperiences.length ? `已完成 ${state.completedExperiences.length} 次 20 分鐘職涯體驗` : `已查看 ${state.exploredCareers.length} 份工作`}</p>{selected && <a href="#your-next-step" className="mt-3 inline-block text-sm font-semibold underline">繼續下一步 →</a>}</section>}
 
@@ -141,7 +128,7 @@ export function ResultsPage() {
           : exploratoryFallback.length > 0 && <PublicCareerTier title="目前較值得探索的方向" subtitle="以下方向在相對排名與部分工作需求上較接近你；卡片會直接列出已達需求的能力與仍需確認的摩擦。" results={exploratoryFallback} />}
         {primaryStrong.length > 0 && primaryModerate.length > 0 && <PublicCareerTier title="有條件適合" subtitle="部分主要需求已吻合，但仍有能力、環境或能量條件需要確認。" results={primaryModerate} />}
         {primaryLower.length > 0 && <PublicCareerTier title="較不適合目前的你" subtitle="目前存在較明顯、且有足夠證據支持的能力、偏好或能量落差；不是在說你做不到。" results={primaryLower} />}
-      </div><Link to="/careers" className="mt-9 inline-block rounded-full border border-slate-400 px-5 py-3 text-sm font-semibold">查看完整 60 個職業分析 →</Link></details></section>
+      </div><Link to="/careers" className="mt-9 inline-block rounded-full border border-slate-400 px-5 py-3 text-sm font-semibold">查看完整職業目錄與分析 →</Link></details></section>
 
       <section id="direction-comparison" className="scroll-mt-24">{sectionTitle('04', '只比較這 3 個方向')}<div className="mb-7 max-w-3xl rounded-3xl bg-slate-100 p-5"><p className="text-sm font-bold text-slate-600">方向清晰度 · {priority ? decisionClarityLabels[priority.decisionClarity] : '計算中'}</p><p className="mt-2 leading-7">{priority?.interpretation}</p></div><p className="mb-7 max-w-3xl leading-7 text-slate-600">{evidenceBacked ? '先看工作模式與可能摩擦，不用先研究所有職稱。' : '先比較三種工作活動，再用 20 分鐘體驗取得更具體的判斷依據。'}</p><div className="grid gap-5 lg:grid-cols-3">{directions.map((direction) => <DirectionCard key={direction.id} direction={direction} selected={selected?.id === direction.id} onSelect={() => selectAndContinue(direction)} />)}</div></section>
 

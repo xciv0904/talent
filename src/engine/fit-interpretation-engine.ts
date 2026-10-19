@@ -554,7 +554,7 @@ export function interpretSpecificCareer({
     environmentFriction,
   );
   if (!matchingReasons.length && relativePercentile >= 0.7) {
-    matchingReasons.push('這份工作在目前 60 種職業中相對靠前，但能力證據還沒有集中到足以形成強推薦。');
+    matchingReasons.push('這份工作在目前收錄的職業中相對靠前，但能力證據還沒有集中到足以形成強推薦。');
   }
   return {
     careerId,

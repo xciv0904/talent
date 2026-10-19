@@ -31,7 +31,7 @@ export function DiscoverPage() {
           <p className="mt-8 max-w-2xl text-base leading-8 text-ink/65 sm:text-lg">從你的日常選擇、思考方式與真實經驗中，找出你可能從沒意識到的天賦，並整理出值得你下一步探索的職涯方向。</p>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
             <Link to={primaryTarget} className="button-primary">{primaryLabel} <span aria-hidden="true">↗</span></Link>
-            <a href="#interactive-demo" className="button-secondary">看看它怎麼分析 <span aria-hidden="true">↓</span></a>
+            <Link to="/lab" className="button-secondary">Career Lab｜先體驗另一種職涯 ↗</Link>
           </div>
           <p className="mt-4 text-sm text-ink/50">約 5–7 分鐘 · 25 題先看初步結果 · 可再做 10 題提高完整度</p>
           {hasProgress && <p className="mt-2 text-sm font-semibold text-ink/60">{hasPreliminaryResults ? `核心 ${CORE_DISCOVERY_QUESTIONS.length} 題已完成，尚有 ${QUICK_DISCOVERY_QUESTIONS.length - completedAnswers} 題可補充` : `核心探索已完成 ${completedAnswers} / ${CORE_DISCOVERY_QUESTIONS.length} 題`}</p>}

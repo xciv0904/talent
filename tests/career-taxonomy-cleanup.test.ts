@@ -71,6 +71,8 @@ describe('career results taxonomy cleanup', () => {
   it('removes legacy public tabs while retaining only internal category data', () => {
     expect(source).not.toMatch(/Best Fit|Easier Transition|High Potential|Surprise Me/);
     expect(source).not.toContain('result-tab');
-    expect(source).toContain('查看完整 60 種職業排名');
+    expect(source).toContain('查看完整 ');
+    expect(source).toContain('CAREER_PROFILES.length');
+    expect(source).not.toContain('60 種');
   });
 });

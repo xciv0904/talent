@@ -5,9 +5,9 @@ import { CAREER_FAMILIES, CAREER_MATCH_VALUE_DIMENSIONS, ENVIRONMENT_DIMENSIONS,
 import { auditCareerVectors } from '../src/utils';
 
 describe('career knowledge base', () => {
-  it('contains 60 unique, complete careers across all 20 families', () => {
-    expect(CAREER_PROFILES).toHaveLength(60);
-    expect(new Set(CAREER_PROFILES.map(({ id }) => id)).size).toBe(60);
+  it('contains 100 unique, complete careers across all 20 families', () => {
+    expect(CAREER_PROFILES).toHaveLength(100);
+    expect(new Set(CAREER_PROFILES.map(({ id }) => id)).size).toBe(100);
     expect(new Set(CAREER_PROFILES.map(({ family }) => family))).toEqual(new Set(CAREER_FAMILIES));
 
     const ids = new Set(CAREER_PROFILES.map(({ id }) => id));

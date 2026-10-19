@@ -75,7 +75,7 @@ describe('release raw-answer end-to-end regression', () => {
       expect(pipeline.talentProfile.baseTalents).toHaveLength(20);
       expect(pipeline.talentProfile.compositeTalents).toHaveLength(12);
       expect(Object.values(pipeline.profiles.coverage)).toEqual([1, 1, 1, 1]);
-      expect(pipeline.matches).toHaveLength(60);
+      expect(pipeline.matches).toHaveLength(CAREER_PROFILES.length);
       expect(pipeline.matches.every(({ matchScore }) => Number.isFinite(matchScore))).toBe(true);
       expect(pipeline.matches.some(({ talentReasonDetails }) => talentReasonDetails.length > 0)).toBe(true);
       expect(Object.values(pipeline.categories).flat().every(({ careerId }) => CAREER_PROFILES.some(({ id }) => id === careerId))).toBe(true);
@@ -85,7 +85,7 @@ describe('release raw-answer end-to-end regression', () => {
   it('uses raw answers for all twelve Golden Personas in release distribution', () => {
     expect(goldenPipelines).toHaveLength(12);
     expect(goldenPipelines.every(({ rawAnswers }) => rawAnswers.length === 35)).toBe(true);
-    expect(goldenPipelines.every(({ matches }) => matches.length === 60)).toBe(true);
+    expect(goldenPipelines.every(({ matches }) => matches.length === CAREER_PROFILES.length)).toBe(true);
   });
 
   it('reports final surprise-threshold comparison over 22 raw profiles', () => {
@@ -134,7 +134,7 @@ describe('release raw-answer end-to-end regression', () => {
     }
   });
 
-  it('reports score distribution and rank separation over 32 raw profiles and 1,920 matches', () => {
+  it('reports score distribution and rank separation over 32 raw profiles and all catalog matches', () => {
     const pipelines = [...goldenPipelines, ...syntheticPipelines.slice(0, 20)];
     const allScores = pipelines.flatMap(({ matches }) => matches.map(({ matchScore }) => matchScore));
     const distribution = summary(allScores);
@@ -148,7 +148,7 @@ describe('release raw-answer end-to-end regression', () => {
     report('DISTRIBUTION', { count: allScores.length, ...distribution });
     report('RANKINGS', rankings);
     report('SEPARATION', separation);
-    expect(allScores).toHaveLength(1920);
+    expect(allScores).toHaveLength(32 * CAREER_PROFILES.length);
     expect(distribution.max).toBeLessThan(0.9);
     expect(distribution.p90 - distribution.p10).toBeGreaterThan(0.18);
     expect(separation.top5VsMedian).toBeGreaterThan(0.04);

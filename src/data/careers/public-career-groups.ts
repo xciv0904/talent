@@ -1,6 +1,8 @@
+import { COMMON_CAREERS } from './common-careers';
 import type { PublicCareerGroup } from '../../types';
 
 export const PUBLIC_CAREER_GROUPS = [
+  ...COMMON_CAREERS.map((c) => ({ id: c.id, title: c.titleZh, description: c.description, specificCareerIds: [c.id], commonTitles: [c.titleZh, ...c.aliases], dailyTasks: c.coreTasks })),
   {
     id: 'software_development', title: '軟體開發', description: '把需求轉成可以穩定運作的數位工具與系統。',
     specificCareerIds: ['software_engineer'], commonTitles: ['軟體工程師', '軟體開發工程師'],

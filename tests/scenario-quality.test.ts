@@ -30,7 +30,9 @@ describe('Quick Discovery self-contained scenario quality', () => {
     expect(QUICK_DISCOVERY_QUESTIONS).toHaveLength(35);
     for (const question of QUICK_DISCOVERY_QUESTIONS) {
       const sentenceCount = question.scenario.split(/[。！？]/).filter(Boolean).length;
-      expect(question.scenario.length, question.id).toBeGreaterThanOrEqual(35);
+      // Short concrete contexts are intentional: preserve meaning, do not pad to 35 characters.
+      expect(question.scenario.length, question.id).toBeGreaterThanOrEqual(18);
+      expect(question.scenario.length, question.id).toBeLessThanOrEqual(50);
       expect(sentenceCount, question.id).toBeGreaterThanOrEqual(1);
       expect(sentenceCount, question.id).toBeLessThanOrEqual(3);
       expect(question.decisionPoint.length, question.id).toBeGreaterThanOrEqual(10);

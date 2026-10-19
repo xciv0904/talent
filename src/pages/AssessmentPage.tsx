@@ -99,14 +99,19 @@ export function AssessmentPage() {
   if (!introDismissed && state.answers.length === 0) return <AssessmentIntro onStart={() => setIntroDismissed(true)} />;
   if (hasPreliminaryResults && index < CORE_COUNT) return <SupplementalIntro onStart={beginSupplementalAssessment} />;
 
+  const isEnergyPair = question.type === 'energy' && question.selection === 'multiple';
+  const energyCount = answer?.selectedOptionIds.length ?? 0;
+  const currentPrompt = isEnergyPair ? energyCount === 0 ? '先選一件：做完還有精神的事' : energyCount === 1 ? '再選一件：做久最累的事' : '選好了，可以到下一題' : question.prompt;
+  const scaleLabels = question.type === 'evidence' ? ['印象模糊', '記得大概', '說得出做法', '有成果紀錄', '有成果與回饋'] : ['很少這樣做', '偶爾這樣做', '有時這樣做', '常常這樣做', '幾乎都這樣做'];
+
   return <main className="mx-auto min-h-[calc(100svh-5rem)] max-w-4xl px-3 py-6 sm:px-6 sm:py-14">
     <div className="flex items-center justify-between gap-4 text-sm"><span className="font-semibold">{isSupplemental ? '補充驗證' : '核心探索'} · {typeNames[question.type]}</span><span className="text-slate-500">{phaseIndex + 1} / {phaseLength}</span></div>
     <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-ink/10" aria-label={`進度 ${progress}%`}><div className="h-full rounded-full bg-coral transition-all" style={{ width: `${progress}%` }} /></div>
     <section className="mt-6 rounded-[1.5rem] border border-ink/10 bg-white/65 p-4 shadow-[0_30px_80px_-65px_rgba(24,35,31,.65)] sm:mt-8 sm:rounded-[2rem] sm:p-10">
       <div className="flex items-center justify-between gap-3 text-xs font-semibold tracking-widest text-slate-400 uppercase"><span>{question.id}</span><span>情境</span></div>
-      <h1 className="mt-3 font-serif text-[clamp(1.55rem,4vw,2.35rem)] font-normal leading-[1.2] tracking-[-.025em] text-balance">{question.scenario}</h1>
-      <p className="mt-5 border-l-2 border-blue-300 pl-4 text-lg font-semibold leading-7 text-slate-900 sm:text-xl">{question.prompt}</p>
-      {question.description && <p className="mt-3 text-slate-600">{question.description}</p>}
+      <p className="mt-4 text-base leading-7 text-slate-600">{question.scenario}</p>
+      <h1 className="mt-4 text-2xl font-semibold leading-snug sm:text-3xl" aria-live={isEnergyPair ? 'polite' : undefined}>{currentPrompt}</h1>
+      <p className="mt-3 text-sm leading-6 text-slate-500">{isEnergyPair ? '先不管擅不擅長，只想做完的感受。選的兩件事不能相同。' : question.type === 'evidence' ? '選你真的做過的一項；記不清楚也可以照實填。' : question.type === 'behavior' ? '先選你平常最接近的做法，再選出現的頻率。' : '選最接近你的反應，不用選看起來最厲害的答案。'}</p>
       <div className={`mt-8 grid gap-3 ${question.type === 'forced_choice' ? 'sm:grid-cols-2' : question.type === 'energy' ? 'sm:grid-cols-2' : ''}`}>
         {question.options.map((option, optionIndex) => {
           const selected = answer?.selectedOptionIds.includes(option.id) ?? false;
@@ -114,13 +119,13 @@ export function AssessmentPage() {
           const energyOrder = question.type === 'energy' && question.selection === 'multiple'
             ? answer?.selectedOptionIds.indexOf(option.id)
             : -1;
-          return <button key={option.id} type="button" onClick={() => select(option.id)} className={`assessment-option min-h-20 rounded-2xl border p-4 text-left ${cardTone} ${selected ? 'border-ink ring-2 ring-ink ring-offset-2' : 'hover:shadow-md'}`}>
+          return <button key={option.id} type="button" aria-pressed={selected} onClick={() => select(option.id)} className={`assessment-option min-h-20 rounded-2xl border p-4 text-left ${cardTone} ${selected ? 'border-ink ring-2 ring-ink ring-offset-2' : 'hover:shadow-md'}`}>
             <span className="flex items-start gap-3"><span className={`grid size-8 shrink-0 place-items-center rounded-full text-sm ${selected ? 'bg-ink text-white' : 'bg-white/80 text-ink/50'}`}>{energyOrder === 0 ? '＋' : energyOrder === 1 ? '－' : question.type === 'ranking' && rank !== undefined && rank >= 0 ? rank + 1 : String.fromCharCode(65 + optionIndex)}</span><span><strong className="font-medium leading-6">{option.label}</strong>{energyOrder === 0 && <span className="mt-1 block text-xs font-semibold text-blue-700">較有精神</span>}{energyOrder === 1 && <span className="mt-1 block text-xs font-semibold text-slate-600">較消耗</span>}{option.description && <span className="mt-1 block text-sm leading-5 text-ink/50">{option.description}</span>}</span></span>
           </button>;
         })}
       </div>
       {question.type === 'energy' && answer?.selectedOptionIds.length ? <button type="button" onClick={() => saveResponse({ questionId: question.id, selectedOptionIds: [], answeredAt: new Date().toISOString() })} className="mt-4 text-sm font-semibold underline decoration-slate-300 underline-offset-4">重新選擇這題</button> : null}
-      {'scale' in question && answer && <fieldset className="mt-8 rounded-2xl bg-slate-100 p-5"><legend className="px-1 font-semibold">再選一個最接近的程度</legend><div className="mt-3 flex justify-between text-xs leading-5 text-slate-500"><span className="max-w-[8rem]">{question.scale.minLabel}</span><span className="max-w-[8rem] text-right">{question.scale.maxLabel}</span></div><div className="mt-4 grid grid-cols-5 gap-2">{Array.from({ length: question.scale.max - question.scale.min + 1 }, (_, offset) => question.scale.min + offset).map((value) => <button key={value} type="button" aria-pressed={answer.scaleValue === value} aria-label={`程度 ${value}：${value === question.scale.min ? question.scale.minLabel : value === question.scale.max ? question.scale.maxLabel : ''}`} onClick={() => saveResponse({ ...answer, scaleValue: value, answeredAt: new Date().toISOString() })} className={`min-h-12 rounded-xl border text-sm font-semibold ${answer.scaleValue === value ? 'border-ink bg-ink text-white' : 'border-slate-300 bg-white'}`}>{value}</button>)}</div>{answer.scaleValue === undefined && <p className="mt-3 text-sm text-slate-600" aria-live="polite">選擇程度後才能進入下一題。</p>}</fieldset>}
+      {'scale' in question && answer && <fieldset className="mt-8 rounded-2xl bg-slate-100 p-5"><legend className="px-1 font-semibold">{question.type === 'evidence' ? '這個例子，你記得多清楚？' : '平常遇到類似的事，你多常這樣做？'}</legend><div className="mt-3 flex justify-between text-xs leading-5 text-slate-500"><span className="max-w-[8rem]">{question.scale.minLabel}</span><span className="max-w-[8rem] text-right">{question.scale.maxLabel}</span></div><div className="mt-4 grid grid-cols-5 gap-2">{Array.from({ length: question.scale.max - question.scale.min + 1 }, (_, offset) => question.scale.min + offset).map((value) => <button key={value} type="button" aria-pressed={answer.scaleValue === value} aria-label={`程度 ${value}：${scaleLabels[value - question.scale.min]}`} onClick={() => saveResponse({ ...answer, scaleValue: value, answeredAt: new Date().toISOString() })} className={`min-h-12 rounded-xl border text-xs leading-5 font-semibold ${answer.scaleValue === value ? 'border-ink bg-ink text-white' : 'border-slate-300 bg-white'}`}>{scaleLabels[value - question.scale.min]}</button>)}</div>{answer.scaleValue === undefined && <p className="mt-3 text-sm text-slate-600" aria-live="polite">選擇程度後才能進入下一題。</p>}</fieldset>}
     </section>
     <div className="mt-4 rounded-2xl border border-ink/10 bg-white/45 p-4"><button type="button" aria-expanded={feedbackOpen} onClick={() => setFeedbackOpen((open) => !open)} className="text-sm font-semibold underline decoration-slate-300 underline-offset-4">這題不好回答</button>{feedbackOpen && <div className="mt-3 flex flex-wrap gap-2" aria-label="題目回饋">{questionFeedbackOptions.map(([value, label]) => { const selected = state.betaFeedback.questionFeedback.some((item) => item.questionId === question.id && item.reason === value); return <button key={value} type="button" aria-pressed={selected} onClick={() => saveQuestionFeedback(question.id, value)} className={`rounded-full border px-3 py-2 text-xs ${selected ? 'border-ink bg-ink text-white' : 'border-ink/15 bg-white text-ink/65'}`}>{label}</button>; })}</div>}</div>
     {submissionError && <p role="alert" className="mt-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{submissionError}</p>}
@@ -132,9 +137,9 @@ export function AssessmentPage() {
 function AssessmentIntro({ onStart }: { onStart: () => void }) {
   return <main className="mx-auto min-h-[calc(100svh-5rem)] max-w-4xl px-5 py-14 sm:py-20">
     <p className="text-sm font-bold tracking-widest text-slate-500 uppercase">開始前先知道</p>
-    <h1 className="mt-4 max-w-3xl font-serif text-4xl leading-tight sm:text-6xl">先用 25 個選擇，整理你自然的工作方式。</h1>
-    <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">沒有標準答案，也不用想像自己是某種職業。選你第一個自然反應，比選「看起來最好」的答案更有用。</p>
-    <div className="mt-10 grid gap-4 sm:grid-cols-3"><IntroCard label="約 5–7 分鐘" body="25 題完成後先看初步結果，也可以中途離開。" /><IntroCard label="可再補 10 題" body="補充能量、興趣、環境與價值觀，提高分析完整度。" /><IntroCard label="結果不是定論" body="結果提供可追溯理由與低成本職涯體驗。" /></div>
+    <h1 className="mt-4 max-w-3xl font-serif text-4xl leading-tight sm:text-6xl">用 25 個日常選擇，找出先試哪類工作。</h1>
+    <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">不用懂職業術語，照平常的反應選。做完先拿到值得試的方向、作答依據，以及一個能開始的工作體驗。</p>
+    <div className="mt-10 grid gap-4 sm:grid-cols-3"><IntroCard label="約 5–7 分鐘" body="25 題完成後先看初步結果，也可以中途離開。" /><IntroCard label="可再補 10 題" body="補充能量、興趣、環境與價值觀，提高分析完整度。" /><IntroCard label="做完拿到下一步" body="先試哪類工作、看職缺問什麼，以及怎麼用 20 分鐘確認。" /></div>
     <div className="mt-8 rounded-3xl bg-blue-50 p-6"><h2 className="text-lg font-semibold">看到能量題時</h2><p className="mt-2 leading-7 text-slate-600">同一題會選兩項：先選做完仍「較有精神」的，再選做久「較消耗」的。能力與能量會分開分析。</p></div>
     <div className="mt-9 flex flex-wrap gap-3"><button type="button" onClick={onStart} className="rounded-full bg-ink px-6 py-3 font-semibold text-white">開始 25 題核心探索 →</button><Link to="/methodology" className="rounded-full border border-slate-300 bg-white px-6 py-3 font-semibold">先看分析方法</Link></div>
   </main>;

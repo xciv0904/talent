@@ -14,7 +14,7 @@ describe('relative public career fit interpretation', () => {
     const result = interpretPublicCareers({ matches, talentProfile, responses: persona.responses });
 
     expect(JSON.stringify(matches)).toBe(snapshot);
-    expect(result.all.flatMap(({ underlyingMatches }) => underlyingMatches)).toHaveLength(60);
+    expect(result.all.flatMap(({ underlyingMatches }) => underlyingMatches)).toHaveLength(CAREER_PROFILES.length);
     for (const match of matches) {
       const nested = result.all.flatMap(({ underlyingMatches }) => underlyingMatches).find(({ careerId }) => careerId === match.careerId);
       expect(nested?.matchScore).toBe(match.matchScore);
@@ -94,7 +94,7 @@ describe('relative public career fit interpretation', () => {
       const topFive = before.slice(0, 5).map(({ careerId }) => careerId);
       const talentProfile: UserTalentProfile = { baseTalents: persona.input.talentScores, compositeTalents: [], generatedAt: '' };
       const publicResult = interpretPublicCareers({ matches: before, talentProfile, responses: persona.responses });
-      expect(publicResult.all).toHaveLength(33);
+      expect(publicResult.all).toHaveLength(73);
       expect(matchCareers(CAREER_PROFILES, persona.input).slice(0, 5).map(({ careerId }) => careerId)).toEqual(topFive);
     }
   });

@@ -102,7 +102,7 @@ describe('complete logic and result QA', () => {
   it('keeps all component and final scores finite and inside 0..1', () => {
     for (const persona of GOLDEN_PERSONAS) {
       const results = matchCareers(CAREER_PROFILES, persona.input);
-      expect(results).toHaveLength(60);
+      expect(results).toHaveLength(CAREER_PROFILES.length);
       for (const result of results) {
         for (const [key, value] of Object.entries(result)) {
           if (key === 'matchScore' || key.endsWith('Match')) expectUnit(value as number, `${persona.id}/${result.careerId}/${key}`);

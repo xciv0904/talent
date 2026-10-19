@@ -1,3 +1,4 @@
+import { COMMON_CAREERS } from '../data/careers/common-careers';
 import { BASE_TALENTS } from '../data/talents';
 import type { CareerMatchResult, CareerProfile, ExperienceFeeling, ExperienceGuidance, TalentId, TalentScore } from '../types';
 
@@ -48,6 +49,18 @@ export interface CareerExperiencePlan {
 }
 
 export function buildCareerExperiencePlan(career: CareerProfile): CareerExperiencePlan {
+  if (COMMON_CAREERS.some((c) => c.id === career.id)) return {
+    purpose: `先用公開資訊、紙筆或虛構情境，了解${career.titleZh}的一小段工作，觀察自己是否想繼續投入。`,
+    duration: '20 分鐘起步；參訪、長期觀察與正式受訓另行安排',
+    requirements: ['紙筆或備忘錄', '公開資料或虛構情境', '選做：成年朋友或從業者回饋'],
+    outcome: '留下一份小作品或待問清單，再判斷想繼續、先練習或換方向。',
+    steps: [
+      `這次的具體題目：${career.careerExperiment.description}`,
+      '先花 5 分鐘準備資料。只選可以用紙筆、公開資訊或安全日常活動完成的部分；需要資格、現場授權或專業指導的工作，先整理要問從業者的問題。',
+      '花 10 分鐘完成題目中的一小份草稿、紀錄或問題清單。需要參訪或持續觀察的題目，這次先完成觀察表與訪談問題。',
+      '最後 5 分鐘記下：哪個細節最有興趣？哪一步最累？下一次想親自試、請人回饋，還是先放下？',
+    ],
+  };
   const primaryTask = career.coreTasks[0] ?? career.description;
   const secondTask = career.coreTasks[1] ?? primaryTask;
   return {

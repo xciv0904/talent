@@ -1,3 +1,7 @@
+import { CAREER_PROFILES } from '../data/careers';
+import { matchCareers } from '../engine/career-match-engine';
+import { categorizeCareerResults } from '../engine/career-result-engine';
+import type { CareerMatchInput } from '../types';
 import { CURRENT_RESULT_VERSIONS, PRODUCT_VERSIONS, type ResultVersionInfo } from '../config/versions';
 import { CORE_DISCOVERY_QUESTIONS, QUICK_DISCOVERY_QUESTIONS, SUPPLEMENTAL_DISCOVERY_QUESTIONS } from '../data/questions';
 import { isQuestionResponseComplete } from '../utils/assessment-response';
@@ -221,6 +225,23 @@ export function parseStoredState(raw: string | null): AppStorageState {
       parsed.careerResults.profiles && isResultVersionInfo(parsed.careerResults.versions) ? parsed.careerResults : null;
     const measurementIsCurrent = talentProfile?.baseTalents.every((talent) => Boolean(talent.measurement));
     const assessmentIsCurrent = careerResults?.versions.assessmentVersion === CURRENT_RESULT_VERSIONS.assessmentVersion;
+    // Refresh a dataset-only change from the saved measurement; keep answers, progress and talents.
+    const datasetOnlyChange = careerResults && talentProfile && measurementIsCurrent && assessmentIsCurrent
+      && careerResults.versions.careerDatasetVersion !== CURRENT_RESULT_VERSIONS.careerDatasetVersion
+      && careerResults.versions.talentModelVersion === CURRENT_RESULT_VERSIONS.talentModelVersion
+      && careerResults.versions.matchingEngineVersion === CURRENT_RESULT_VERSIONS.matchingEngineVersion
+      && careerResults.versions.explanationVersion === CURRENT_RESULT_VERSIONS.explanationVersion;
+    if (datasetOnlyChange && careerResults && talentProfile) {
+      const profiles = careerResults.profiles;
+      const input: CareerMatchInput = {
+        talentScores: talentProfile.baseTalents, interestProfile: profiles.interestProfile,
+        workStyle: profiles.workStyle, environmentTolerance: profiles.environmentTolerance, valuesProfile: profiles.valuesProfile,
+        profileCoverage: profiles.coverage, transferableSkills: {}, education: 'none', yearsExperience: 0,
+        certifications: [], hasPortfolio: false, languages: [], professionalLicenses: [], consideredCareerIds: [], consideredFamilies: [],
+      };
+      const matches = matchCareers(CAREER_PROFILES, input);
+      careerResults = { ...careerResults, matches, categories: categorizeCareerResults(matches, input), versions: { ...CURRENT_RESULT_VERSIONS } };
+    }
     const engineIsCurrent = careerResults?.versions.talentModelVersion === CURRENT_RESULT_VERSIONS.talentModelVersion
       && careerResults.versions.matchingEngineVersion === CURRENT_RESULT_VERSIONS.matchingEngineVersion
       && careerResults.versions.careerDatasetVersion === CURRENT_RESULT_VERSIONS.careerDatasetVersion

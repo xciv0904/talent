@@ -1,3 +1,4 @@
+import { CAREER_PROFILES } from '../src/data/careers';
 import { describe, expect, it } from 'vitest';
 import { QUICK_DISCOVERY_QUESTIONS } from '../src/data/questions';
 import { runCareerDiscoveryPipeline } from '../src/engine';
@@ -27,7 +28,7 @@ describe('Assessment → Talent → Career Match integration', () => {
       expect(Object.keys(result.profiles.environmentTolerance).sort()).toEqual([...ENVIRONMENT_DIMENSIONS].sort());
       expect(Object.keys(result.profiles.valuesProfile).sort()).toEqual([...VALUE_DIMENSIONS].sort());
       expect(Object.values(result.profiles.coverage)).toEqual([1, 1, 1, 1]);
-      expect(result.matches).toHaveLength(60);
+      expect(result.matches).toHaveLength(CAREER_PROFILES.length);
       expect(result.matches.every((match) => Number.isFinite(match.matchScore))).toBe(true);
       expect(Object.keys(result.categories).sort()).toEqual(
         ['best_fit', 'easier_transition', 'high_potential', 'surprise_me'].sort(),

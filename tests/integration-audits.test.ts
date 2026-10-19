@@ -34,7 +34,7 @@ describe('integration audits', () => {
     expect(results[2].count).toBeGreaterThanOrEqual(results[3].count);
   });
 
-  it('reports score distribution and separation for all 1,020 matches', () => {
+  it('reports score distribution and separation for all catalog matches', () => {
     const summaries = auditInputs.map(({ id, input }) => {
       const scores = matchCareers(CAREER_PROFILES, input).map(({ matchScore }) => matchScore);
       return {
@@ -51,7 +51,7 @@ describe('integration audits', () => {
     const distribution = summarizeDistribution(allScores);
     report('distribution', distribution);
     report('separation', summaries);
-    expect(allScores).toHaveLength(1020);
+    expect(allScores).toHaveLength(auditInputs.length * CAREER_PROFILES.length);
     expect(distribution.max - distribution.min).toBeGreaterThan(0.25);
     expect(summaries.every((item) => item.top5Average > item.bottom10Average)).toBe(true);
   });
@@ -66,7 +66,7 @@ describe('integration audits', () => {
     for (const family of families) {
       const familyCareers = CAREER_PROFILES.filter((career) => career.family === family);
       const familyPairs = nearestCareerPairs(familyCareers, 3);
-      expect(familyCareers).toHaveLength(3);
+      expect(familyCareers.length).toBeGreaterThanOrEqual(3);
       expect(familyPairs).toHaveLength(3);
       expect(familyPairs[0].overallSimilarity).toBeLessThan(0.98);
     }
